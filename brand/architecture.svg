@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" fill="currentColor" role="img" aria-labelledby="arch-title arch-desc">
+  <title id="arch-title">Credence four-contract topology</title>
+  <desc id="arch-desc">CredenceGatedVault and CredencePassport read the Credence core synchronously via credit_of() .view(); CredenceGovernor dispatches admin operations to the core asynchronously via emit.</desc>
+
+  <defs>
+    <linearGradient id="archChip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A053FD"/>
+      <stop offset="1" stop-color="#E472DC"/>
+    </linearGradient>
+    <marker id="archArrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L10 6 L1 11 Z" fill="#9B6AF6"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="48" y="44" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.4">Credence — four-contract topology</text>
+  <text x="48" y="68" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="15" opacity="0.6">One core oracle; three Intelligent Contracts compose around it.</text>
+
+  <!-- ============ Core ============ -->
+  <rect x="350" y="232" width="260" height="140" rx="18" fill="#9B6AF6" fill-opacity="0.08" stroke="#9B6AF6" stroke-width="2"/>
+  <rect x="368" y="250" width="34" height="34" rx="9" fill="url(#archChip)"/>
+  <g transform="translate(373.7 255.7) scale(0.9583)" fill="none" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5 4.5 5.2v6.1c0 4.6 3.1 8.2 7.5 10.2 4.4-2 7.5-5.6 7.5-10.2V5.2L12 2.5Z"/>
+    <path d="M8 14.5 10.7 11l2.1 2 3.2-4"/>
+    <path d="M14.4 9h1.6v1.6"/>
+  </g>
+  <text x="414" y="271" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="21" font-weight="700">Credence</text>
+  <text x="414" y="289" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12.5" opacity="0.6">core · creditworthiness oracle</text>
+  <line x1="368" y1="303" x2="592" y2="303" stroke="currentColor" stroke-opacity="0.14" stroke-width="1"/>
+  <text x="480" y="325" text-anchor="middle" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" fill="#9B6AF6">credit_of() · is_creditworthy()</text>
+  <text x="480" y="345" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11.5" opacity="0.55">consensus underwriting · fails safe to DENY</text>
+  <text x="480" y="362" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11.5" opacity="0.45">borrowers draw/repay · lenders fund/earn here</text>
+
+  <!-- ============ Gated Vault (top-left) ============ -->
+  <rect x="55" y="80" width="250" height="98" rx="16" fill="currentColor" fill-opacity="0.035" stroke="currentColor" stroke-opacity="0.18"/>
+  <text x="72" y="118" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700">CredenceGatedVault</text>
+  <text x="72" y="140" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12.5" opacity="0.6">collateral-free allowlist</text>
+  <text x="72" y="159" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11.5" opacity="0.5">admits a member iff grade ≥ min</text>
+
+  <!-- ============ Passport (top-right) ============ -->
+  <rect x="655" y="80" width="250" height="98" rx="16" fill="currentColor" fill-opacity="0.035" stroke="currentColor" stroke-opacity="0.18"/>
+  <text x="672" y="118" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700">CredencePassport</text>
+  <text x="672" y="140" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12.5" opacity="0.6">soulbound credit passport</text>
+  <text x="672" y="159" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11.5" opacity="0.5">self-minted · non-transferable</text>
+
+  <!-- ============ Governor (bottom) ============ -->
+  <rect x="350" y="452" width="260" height="100" rx="16" fill="currentColor" fill-opacity="0.035" stroke="currentColor" stroke-opacity="0.18"/>
+  <text x="480" y="490" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700">CredenceGovernor</text>
+  <text x="480" y="512" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12.5" opacity="0.6">M-of-N multisig owner</text>
+  <text x="480" y="531" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11.5" opacity="0.5">propose · approve · execute</text>
+
+  <!-- ============ Connectors ============ -->
+  <!-- Vault -> Core (sync read) -->
+  <path d="M210 178 L372 236" fill="none" stroke="#9B6AF6" stroke-width="2" marker-end="url(#archArrow)"/>
+  <g transform="translate(214 188)">
+    <rect x="0" y="0" width="150" height="40" rx="9" fill="currentColor" fill-opacity="0.06"/>
+    <text x="10" y="17" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" fill="#9B6AF6">credit_of()</text>
+    <text x="10" y="32" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11" opacity="0.65">.view() — synchronous</text>
+  </g>
+
+  <!-- Passport -> Core (sync read) -->
+  <path d="M750 178 L588 236" fill="none" stroke="#9B6AF6" stroke-width="2" marker-end="url(#archArrow)"/>
+  <g transform="translate(596 188)">
+    <rect x="0" y="0" width="150" height="40" rx="9" fill="currentColor" fill-opacity="0.06"/>
+    <text x="10" y="17" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" fill="#9B6AF6">credit_of()</text>
+    <text x="10" y="32" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11" opacity="0.65">.view() — synchronous</text>
+  </g>
+
+  <!-- Governor -> Core (async emit) -->
+  <path d="M480 452 L480 374" fill="none" stroke="#9B6AF6" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#archArrow)"/>
+  <g transform="translate(494 394)">
+    <rect x="0" y="0" width="150" height="40" rx="9" fill="currentColor" fill-opacity="0.06"/>
+    <text x="10" y="17" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" fill="#9B6AF6">emit</text>
+    <text x="10" y="32" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11" opacity="0.65">admin ops — asynchronous</text>
+  </g>
+
+  <!-- ============ Legend ============ -->
+  <g transform="translate(55 566)" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12.5">
+    <line x1="0" y1="0" x2="36" y2="0" stroke="#9B6AF6" stroke-width="2" marker-end="url(#archArrow)"/>
+    <text x="46" y="4" opacity="0.8">synchronous cross-contract read  (.view())</text>
+    <line x1="360" y1="0" x2="396" y2="0" stroke="#9B6AF6" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#archArrow)"/>
+    <text x="406" y="4" opacity="0.8">asynchronous message  (emit)</text>
+  </g>
+</svg>

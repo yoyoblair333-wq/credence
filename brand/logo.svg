@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="credence-logo-title credence-logo-desc">
+  <title id="credence-logo-title">Credence</title>
+  <desc id="credence-logo-desc">The Credence mark: a shield of underwriting enclosing an upward credit curve, on the brand purple-to-pink gradient.</desc>
+  <defs>
+    <!-- Signature brand gradient: .gradient-purple-pink, 135deg
+         oklch(0.62 0.24 300) -> oklch(0.72 0.19 330) -->
+    <linearGradient id="credGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A053FD"/>
+      <stop offset="1" stop-color="#E472DC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle chip -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#credGrad)"/>
+
+  <!-- Credence glyph (24x24 source, scaled into the chip with 16px padding) -->
+  <g transform="translate(16 16) scale(1.3333)" fill="none" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5 4.5 5.2v6.1c0 4.6 3.1 8.2 7.5 10.2 4.4-2 7.5-5.6 7.5-10.2V5.2L12 2.5Z"/>
+    <path d="M8 14.5 10.7 11l2.1 2 3.2-4"/>
+    <path d="M14.4 9h1.6v1.6"/>
+  </g>
+</svg>

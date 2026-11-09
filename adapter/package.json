@@ -1,0 +1,17 @@
+{
+  "name": "credence-adapter",
+  "version": "1.0.0",
+  "description": "Off-chain evidence adapter for the Credence on-chain undercollateralized lending protocol. Packages a credit application's evidence into a canonical, sha256-committed bundle whose commitments are byte-identical to the contract's.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "credence-adapter": "bin/credence-adapter.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

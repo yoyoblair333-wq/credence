@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="248" height="56" viewBox="0 0 248 56" role="img" aria-labelledby="credence-wm-title">
+  <title id="credence-wm-title">Credence</title>
+  <defs>
+    <linearGradient id="credGradWm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A053FD"/>
+      <stop offset="1" stop-color="#E472DC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Mark chip -->
+  <rect x="0" y="6" width="44" height="44" rx="10" fill="url(#credGradWm)"/>
+  <g transform="translate(7 13) scale(1.25)" fill="none" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5 4.5 5.2v6.1c0 4.6 3.1 8.2 7.5 10.2 4.4-2 7.5-5.6 7.5-10.2V5.2L12 2.5Z"/>
+    <path d="M8 14.5 10.7 11l2.1 2 3.2-4"/>
+    <path d="M14.4 9h1.6v1.6"/>
+  </g>
+
+  <!-- Wordmark: "Cred" in theme ink, "ence" in brand purple -->
+  <text x="58" y="37" font-family="'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="33" font-weight="700" letter-spacing="-0.7">
+    <tspan fill="currentColor">Cred</tspan><tspan fill="#9B6AF6">ence</tspan>
+  </text>
+</svg>

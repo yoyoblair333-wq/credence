@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="og-title og-desc">
+  <title id="og-title">Credence — Credit without collateral, underwritten by AI consensus</title>
+  <desc id="og-desc">Credence social card: the Credence mark and wordmark, the headline "Credit without collateral. Underwritten by AI consensus.", the six-grade credit ladder, and "Powered by GenLayer".</desc>
+
+  <defs>
+    <linearGradient id="ogBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="0.55" stop-color="#06060B"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="ogChip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A053FD"/>
+      <stop offset="1" stop-color="#E472DC"/>
+    </linearGradient>
+    <!-- text-gradient: accent -> pink -> blue -->
+    <linearGradient id="ogHead" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#BE85F9"/>
+      <stop offset="0.55" stop-color="#E472DC"/>
+      <stop offset="1" stop-color="#7E8CFF"/>
+    </linearGradient>
+    <radialGradient id="ogAuraTop" cx="0.5" cy="0" r="0.75">
+      <stop offset="0" stop-color="#A664FE" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#A664FE" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ogAuraBottom" cx="0.9" cy="1.05" r="0.6">
+      <stop offset="0" stop-color="#6E7BFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#6E7BFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ogAAA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A053FD"/>
+      <stop offset="1" stop-color="#E472DC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Keynote background -->
+  <rect width="1200" height="630" fill="url(#ogBg)"/>
+  <rect width="1200" height="630" fill="url(#ogAuraTop)"/>
+  <rect width="1200" height="630" fill="url(#ogAuraBottom)"/>
+
+  <!-- Subtle shield watermark bleeding off the right edge -->
+  <g transform="translate(905 70) scale(20.5)" opacity="0.9">
+    <path d="M12 2.5 4.5 5.2v6.1c0 4.6 3.1 8.2 7.5 10.2 4.4-2 7.5-5.6 7.5-10.2V5.2L12 2.5Z" fill="#FFFFFF" fill-opacity="0.035"/>
+    <g fill="none" stroke="#BE85F9" stroke-opacity="0.16" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 14.5 10.7 11l2.1 2 3.2-4"/>
+      <path d="M14.4 9h1.6v1.6"/>
+    </g>
+  </g>
+
+  <!-- Brand lockup, top-left -->
+  <g transform="translate(80 66)">
+    <rect x="0" y="0" width="60" height="60" rx="14" fill="url(#ogChip)"/>
+    <g transform="translate(15 15) scale(1.25)" fill="none" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2.5 4.5 5.2v6.1c0 4.6 3.1 8.2 7.5 10.2 4.4-2 7.5-5.6 7.5-10.2V5.2L12 2.5Z"/>
+      <path d="M8 14.5 10.7 11l2.1 2 3.2-4"/>
+      <path d="M14.4 9h1.6v1.6"/>
+    </g>
+    <text x="78" y="44" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="42" font-weight="700" letter-spacing="-0.8"><tspan fill="#F8F8F8">Cred</tspan><tspan fill="#BE85F9">ence</tspan></text>
+  </g>
+
+  <!-- Eyebrow -->
+  <text x="80" y="236" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="25" font-weight="600" letter-spacing="0.5" fill="#BE85F9">THE ADJUDICATION LAYER FOR THE AGENTIC ECONOMY</text>
+
+  <!-- Headline / value prop -->
+  <text x="78" y="326" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="76" font-weight="700" letter-spacing="-2.2" fill="#FFFFFF">Credit without collateral.</text>
+  <text x="78" y="410" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="76" font-weight="700" letter-spacing="-2.2" fill="url(#ogHead)">Underwritten by AI consensus.</text>
+
+  <!-- Supporting line -->
+  <text x="80" y="466" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="27" font-weight="400" fill="#C7C7D3">A panel of AI underwriters reads your live evidence — under consensus — on GenLayer.</text>
+
+  <!-- Grade-ladder motif -->
+  <g transform="translate(80 506)" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-weight="700" font-size="22">
+    <!-- DENY -->
+    <rect x="0" y="0" width="96" height="46" rx="12" fill="none" stroke="#5A5A6B" stroke-width="1.5"/>
+    <text x="48" y="30" text-anchor="middle" fill="#9797A5">DENY</text>
+    <!-- C -->
+    <rect x="112" y="0" width="60" height="46" rx="12" fill="none" stroke="#7A5AC8" stroke-width="1.5"/>
+    <text x="142" y="30" text-anchor="middle" fill="#B79BEC">C</text>
+    <!-- B -->
+    <rect x="188" y="0" width="60" height="46" rx="12" fill="none" stroke="#8E5CE6" stroke-width="1.5"/>
+    <text x="218" y="30" text-anchor="middle" fill="#C6A6F6">B</text>
+    <!-- A -->
+    <rect x="264" y="0" width="60" height="46" rx="12" fill="none" stroke="#A053FD" stroke-width="1.5"/>
+    <text x="294" y="30" text-anchor="middle" fill="#D7B9FF">A</text>
+    <!-- AA -->
+    <rect x="340" y="0" width="76" height="46" rx="12" fill="#A053FD" fill-opacity="0.18" stroke="#BE85F9" stroke-width="1.5"/>
+    <text x="378" y="30" text-anchor="middle" fill="#E7D4FF">AA</text>
+    <!-- AAA (the goal) -->
+    <rect x="432" y="0" width="92" height="46" rx="12" fill="url(#ogAAA)"/>
+    <text x="478" y="30" text-anchor="middle" fill="#FFFFFF">AAA</text>
+  </g>
+
+  <!-- Footer -->
+  <line x1="80" y1="590" x2="1120" y2="590" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="1"/>
+  <text x="80" y="616" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="600" fill="#BE85F9">#CreditWithoutCollateral</text>
+  <text x="1120" y="616" text-anchor="end" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="500" fill="#9797A5">Powered by GenLayer</text>
+</svg>

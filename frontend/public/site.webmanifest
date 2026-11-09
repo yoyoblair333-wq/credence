@@ -1,0 +1,16 @@
+{
+  "name": "Credence — AI-underwritten credit",
+  "short_name": "Credence",
+  "description": "Undercollateralized credit, underwritten by on-chain AI consensus on GenLayer.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#9B6AF6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

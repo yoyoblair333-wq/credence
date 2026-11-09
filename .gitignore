@@ -1,0 +1,27 @@
+# Python / GenLayer
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+artifacts/
+.env
+.env.local
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Handoff / internal (never publish)
+_handoff/

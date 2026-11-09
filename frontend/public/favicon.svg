@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="Credence">
+  <defs>
+    <linearGradient id="credGradFav" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A053FD"/>
+      <stop offset="1" stop-color="#E472DC"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="url(#credGradFav)"/>
+  <!-- Glyph (24x24 source) scaled to 22px, centered, slightly heavier stroke for small sizes -->
+  <g transform="translate(5 5) scale(0.9167)" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5 4.5 5.2v6.1c0 4.6 3.1 8.2 7.5 10.2 4.4-2 7.5-5.6 7.5-10.2V5.2L12 2.5Z"/>
+    <path d="M8 14.5 10.7 11l2.1 2 3.2-4"/>
+    <path d="M14.4 9h1.6v1.6"/>
+  </g>
+</svg>

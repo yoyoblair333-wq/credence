@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="460" viewBox="0 0 1060 460" fill="currentColor" role="img" aria-labelledby="flow-title flow-desc">
+  <title id="flow-title">Credence borrower journey</title>
+  <desc id="flow-desc">A borrower submits evidence; an AI consensus panel of three personas (CASHFLOW, HISTORY, RISK) agrees on a bounded grade; the grade opens an undercollateralized credit line; the borrower draws, repays and compounds while lenders earn yield.</desc>
+
+  <defs>
+    <marker id="flowArrow" markerWidth="13" markerHeight="13" refX="9.5" refY="6.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L11 6.5 L1 12 Z" fill="#9B6AF6"/>
+    </marker>
+    <marker id="flowArrowSm" markerWidth="10" markerHeight="10" refX="7.5" refY="5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L8 5 L1 9 Z" fill="#9B6AF6"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="30" y="40" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.4">Credence — the borrower journey</text>
+  <text x="30" y="64" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="15" opacity="0.6">Evidence in; a consensus grade; an undercollateralized line that compounds.</text>
+
+  <!-- ===== Stage 1: Submit evidence ===== -->
+  <rect x="30" y="152" width="186" height="150" rx="16" fill="currentColor" fill-opacity="0.035" stroke="currentColor" stroke-opacity="0.18"/>
+  <text x="48" y="186" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="700" fill="#9B6AF6">STEP 1</text>
+  <text x="48" y="210" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700">Submit evidence</text>
+  <text x="48" y="238" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">Up to 8 public items:</text>
+  <text x="48" y="256" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">text, a live https URL,</text>
+  <text x="48" y="274" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">or an image exhibit.</text>
+
+  <!-- arrow 1 -> 2 -->
+  <line x1="222" y1="227" x2="248" y2="227" stroke="#9B6AF6" stroke-width="2.5" marker-end="url(#flowArrow)"/>
+
+  <!-- ===== Stage 2: AI consensus panel ===== -->
+  <rect x="256" y="92" width="402" height="270" rx="16" fill="currentColor" fill-opacity="0.035" stroke="#9B6AF6" stroke-opacity="0.45" stroke-width="1.5"/>
+  <text x="276" y="124" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="700" fill="#9B6AF6">STEP 2</text>
+  <text x="276" y="148" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700">A panel agrees on a grade</text>
+
+  <!-- persona chips -->
+  <g font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif">
+    <rect x="276" y="166" width="160" height="42" rx="10" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.16"/>
+    <text x="290" y="184" font-size="13" font-weight="700">CASHFLOW</text>
+    <text x="290" y="200" font-size="10.5" opacity="0.55">verifiable income</text>
+
+    <rect x="276" y="216" width="160" height="42" rx="10" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.16"/>
+    <text x="290" y="234" font-size="13" font-weight="700">HISTORY</text>
+    <text x="290" y="250" font-size="10.5" opacity="0.55">track record</text>
+
+    <rect x="276" y="266" width="160" height="42" rx="10" fill="currentColor" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.16"/>
+    <text x="290" y="284" font-size="13" font-weight="700">RISK</text>
+    <text x="290" y="300" font-size="10.5" opacity="0.55">fraud + sybil scrutiny</text>
+  </g>
+
+  <!-- converging arrows to grade -->
+  <line x1="440" y1="187" x2="512" y2="232" stroke="#9B6AF6" stroke-width="1.6" marker-end="url(#flowArrowSm)"/>
+  <line x1="440" y1="237" x2="512" y2="237" stroke="#9B6AF6" stroke-width="1.6" marker-end="url(#flowArrowSm)"/>
+  <line x1="440" y1="287" x2="512" y2="242" stroke="#9B6AF6" stroke-width="1.6" marker-end="url(#flowArrowSm)"/>
+
+  <!-- grade pill -->
+  <rect x="522" y="192" width="116" height="92" rx="16" fill="#9B6AF6" fill-opacity="0.12" stroke="#9B6AF6" stroke-width="1.5"/>
+  <text x="580" y="222" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" opacity="0.6">GRADE</text>
+  <text x="580" y="268" text-anchor="middle" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="46" font-weight="700" fill="#9B6AF6">A</text>
+
+  <text x="276" y="334" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11" opacity="0.6">Every validator re-fetches + re-judges · strict-majority floor</text>
+  <text x="276" y="350" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11" opacity="0.6">DENY · C · B · A · AA · AAA — anything uncertain fails to DENY</text>
+
+  <!-- arrow 2 -> 3 -->
+  <line x1="664" y1="227" x2="690" y2="227" stroke="#9B6AF6" stroke-width="2.5" marker-end="url(#flowArrow)"/>
+
+  <!-- ===== Stage 3: Line opens ===== -->
+  <rect x="698" y="152" width="168" height="150" rx="16" fill="currentColor" fill-opacity="0.035" stroke="currentColor" stroke-opacity="0.18"/>
+  <text x="716" y="186" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="700" fill="#9B6AF6">STEP 3</text>
+  <text x="716" y="210" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="700">Line opens</text>
+  <text x="716" y="236" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">Undercollateralized,</text>
+  <text x="716" y="254" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">sized by grade:</text>
+  <text x="716" y="274" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace" font-size="11.5" fill="#9B6AF6">C 100 · B 250 · A 500</text>
+  <text x="716" y="290" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace" font-size="11.5" fill="#9B6AF6">AA 1000 · AAA 2500</text>
+
+  <!-- arrow 3 -> 4 -->
+  <line x1="872" y1="227" x2="898" y2="227" stroke="#9B6AF6" stroke-width="2.5" marker-end="url(#flowArrow)"/>
+
+  <!-- ===== Stage 4: Draw / repay / compound ===== -->
+  <rect x="906" y="152" width="150" height="150" rx="16" fill="currentColor" fill-opacity="0.035" stroke="currentColor" stroke-opacity="0.18"/>
+  <text x="924" y="186" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="700" fill="#9B6AF6">STEP 4</text>
+  <text x="924" y="210" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="17" font-weight="700">Compound</text>
+  <text x="924" y="236" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">Draw · repay on time</text>
+  <text x="924" y="256" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">→ standing ↑ grade ↑</text>
+  <text x="924" y="274" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12" opacity="0.62">limit ↑</text>
+  <text x="924" y="292" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#9B6AF6">lenders earn yield</text>
+
+  <!-- Footer caption -->
+  <line x1="30" y1="396" x2="1030" y2="396" stroke="currentColor" stroke-opacity="0.1" stroke-width="1"/>
+  <text x="30" y="424" font-family="'Switzer', -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="12.5" opacity="0.62">Identity-capped at C until a cited page proves wallet ownership. Lenders fund the native pool and earn a pro-rata share of every origination fee and of interest.</text>
+</svg>
