@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const OG_DESCRIPTION =
   "No collateral, no bank, no committee. A panel of AI underwriters runs inside the contract, reads a borrower's own live public evidence under validator consensus, and agrees on a bounded credit grade before a token moves. Powered by GenLayer.";
 
@@ -12,9 +13,9 @@ export const metadata: Metadata = {
   title: "Credence — undercollateralized credit, underwritten by AI consensus",
   description:
     "No collateral, no bank, no committee. A borrower submits public evidence of creditworthiness; an on-chain panel of AI underwriters fetches it live, judges it, and must agree on a bounded credit grade before a token moves. Powered by GenLayer Intelligent Contracts.",
-  manifest: "/site.webmanifest",
+  manifest: `${BASE}/site.webmanifest`,
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [{ url: `${BASE}/favicon.svg`, type: "image/svg+xml" }],
   },
   openGraph: {
     type: "website",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     description: OG_DESCRIPTION,
     images: [
       {
-        url: "/og-image.svg",
+        url: `${BASE}/og-image.svg`,
         width: 1200,
         height: 630,
         type: "image/svg+xml",
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Credit without collateral. Underwritten by AI consensus.",
     description: OG_DESCRIPTION,
-    images: ["/og-image.svg"],
+    images: [`${BASE}/og-image.svg`],
   },
 };
 

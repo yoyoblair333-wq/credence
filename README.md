@@ -2,6 +2,8 @@
 
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
+**Live app:** https://yoyoblair333-wq.github.io/credence/ · connected to the live Credence v1.4 core on GenLayer studionet (`0x8D9F4365b39bD2646d18e6ceCc9758344605f9ED`, chain 61999)
+
 **Reputation-underwritten, *undercollateralized* credit for the agentic economy —
 a loan decided by an on-chain AI panel that reads a borrower's own public
 evidence, under consensus, before a single token moves.**
