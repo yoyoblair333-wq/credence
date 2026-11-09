@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AccountPanel } from "./AccountPanel";
-import { CredenceLogo, CredenceMark } from "./CredenceLogo";
+import { CredenceLogo } from "./CredenceLogo";
 import { ThemeToggle } from "./ThemeToggle";
 
 /**
@@ -67,8 +67,7 @@ export function Navbar() {
             <div className="flex items-center justify-between h-16">
               {/* Left: brand */}
               <div className="flex items-center gap-3">
-                <CredenceMark size="md" className="flex md:hidden" />
-                <CredenceLogo size="md" className="hidden md:flex" />
+                <CredenceLogo size="md" />
               </div>
 
               {/* Center: tagline */}
