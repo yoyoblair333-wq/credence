@@ -1,0 +1,112 @@
+{
+  "network": "studionet (chain 61999, https://studio.genlayer.com/api)",
+  "owner": "0x8f56D235Fea2b9c7F22Db2b2FedFF7E0e0a1aF57",
+  "issuer": "0x2488DE259f65B5862FBEFFAc2307Ab7D3733C588",
+  "holder": "0x7eF5aea9aB9F611C62cfD597a788DB82067aCd60",
+  "stranger": "0xC6E2df5a0278EcdDa64bA6FbEC76027dEAbe284f",
+  "steps": [
+    {
+      "step": "deploy CreditPassport",
+      "tx": "0x885d024b32b2216ea5fcd501e88b811df07f82f5448a35e49162e6ced5b8135a",
+      "status": "FINALIZED",
+      "result": "MAJORITY_AGREE",
+      "execution": "SUCCESS",
+      "votes": [
+        "agree",
+        "agree",
+        "agree",
+        "idle",
+        "idle"
+      ],
+      "contract": "0x27BB4B8e10f74Cd675017c730de94478706cb9D4"
+    },
+    {
+      "step": "owner add_issuer(issuer)",
+      "tx": "0xcc2004ad9aae24254799a3abee3addcd17bd77679bc9f02305fe864988d19d87",
+      "status": "FINALIZED",
+      "result": "MAJORITY_AGREE",
+      "execution": "SUCCESS",
+      "votes": [
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "idle"
+      ]
+    },
+    {
+      "step": "issuer issue(holder, A, 72)",
+      "tx": "0x18a6d520ec938d712604f258abc4918c577cd72a52d00a3683e8ef03aa2a8f84",
+      "status": "FINALIZED",
+      "result": "MAJORITY_AGREE",
+      "execution": "SUCCESS",
+      "votes": [
+        "agree",
+        "agree",
+        "agree",
+        "idle",
+        "idle"
+      ]
+    },
+    {
+      "step": "stranger issue(self, AAA) - must revert",
+      "tx": "0x31b8e7add853b2b1bf4ee9431459f75a26df09ac7d2a96c079aa86072302e267",
+      "status": "FINALIZED",
+      "result": "MAJORITY_AGREE",
+      "execution": "ERROR",
+      "votes": [
+        "agree",
+        "agree",
+        "agree",
+        "agree",
+        "agree"
+      ],
+      "revert": "[credit-passport] only an approved issuer may call this"
+    }
+  ],
+  "contract": "0x27BB4B8e10f74Cd675017c730de94478706cb9D4",
+  "explorer": "https://explorer-studio.genlayer.com/address/0x27BB4B8e10f74Cd675017c730de94478706cb9D4",
+  "passport_of_holder": {
+    "active": true,
+    "addr": "0x7eF5aea9aB9F611C62cfD597a788DB82067aCd60",
+    "defaulted": false,
+    "ever_defaulted": false,
+    "grade": "A",
+    "grade_rank": 3,
+    "held": true,
+    "memo": "demo: 12 on-time repayments",
+    "minted_at": "2026-11-10T04:41:11.118823Z",
+    "recorded_grade": "A",
+    "revoked": false,
+    "seq": 1,
+    "source": "issuer",
+    "standing": 72,
+    "update_count": 0,
+    "updated_at": "2026-11-10T04:41:11.118823Z",
+    "written_by": "0x2488DE259f65B5862FBEFFAc2307Ab7D3733C588"
+  },
+  "grade_of_holder": "A",
+  "tier_at_least_holder_A": true,
+  "tier_at_least_holder_AA": false,
+  "stranger_has_passport_after": false,
+  "config": {
+    "grades": [
+      "DENY",
+      "C",
+      "B",
+      "A",
+      "AA",
+      "AAA"
+    ],
+    "holder_count": 1,
+    "issuers": [
+      "0x2488DE259f65B5862FBEFFAc2307Ab7D3733C588"
+    ],
+    "oracle": "",
+    "oracle_mode": false,
+    "owner": "0x8f56D235Fea2b9c7F22Db2b2FedFF7E0e0a1aF57",
+    "pending_owner": "0x8f56D235Fea2b9c7F22Db2b2FedFF7E0e0a1aF57",
+    "soulbound": true,
+    "version": "1.0.0"
+  }
+}

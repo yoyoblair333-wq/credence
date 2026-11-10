@@ -53,15 +53,23 @@ jobs:
           pip install genlayer-test genvm-linter pyright pytest
 
       - name: Lint (genvm-lint check — 3 checks)
-        run: genvm-lint check contracts/credence.py
+        run: |
+          genvm-lint check contracts/credence.py
+          genvm-lint check primitives/credit_passport/credit_passport.py
 
       - name: Typecheck (genvm-lint typecheck)
-        run: genvm-lint typecheck contracts/credence.py
+        run: |
+          genvm-lint typecheck contracts/credence.py
+          genvm-lint typecheck primitives/credit_passport/credit_passport.py
 
       - name: Direct-mode test suite
         # genlayer-test fetches and runs the pinned GenVM runner in-process; the
         # LLM is mocked by regex and the live web fetch by URL (see tests/direct).
         run: pytest tests/direct -q
+
+      - name: CreditPassport primitive tests (direct mode)
+        # standalone primitive; separate run so its conftest stays independent
+        run: pytest primitives/credit_passport/tests -q
 
   # --------------------------------------------------------------------- #
   # adapter: the off-chain evidence adapter (zero runtime deps, node:test).

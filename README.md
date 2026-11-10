@@ -448,6 +448,7 @@ inside the consensus block. New to GenLayer? Sign up with referral code
 - `contracts/credence_gated.py` — `CredenceGatedVault` (9 methods): a second Intelligent Contract that **consumes** Credence's oracle to gate a collateral-free allowlist (the composability proof) — see [`docs/COMPOSABILITY.md`](docs/COMPOSABILITY.md)
 - `contracts/credence_governor.py` — `CredenceGovernor` (8 methods): an on-chain **M-of-N** multisig that can own and govern Credence with no change to Credence — see [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md)
 - `contracts/credence_passport.py` — `CredencePassport` (11 methods): a **soulbound**, non-transferable credit passport an address mints for itself from its live Credence standing — see [`docs/PASSPORT.md`](docs/PASSPORT.md)
+- `primitives/credit_passport/` — `CreditPassport`, the passport packaged as a **standalone, reusable primitive**: an issuer-controlled (plus optional oracle-synced) registry of soulbound credit grades any dApp can read with one view call; own tests, live studionet deployment — see [`primitives/credit_passport/README.md`](primitives/credit_passport/README.md)
 - `tests/direct/test_credence.py` — the 61-test direct-mode scenario suite
 - `tests/direct/test_invariants.py` — the companion 6-test property/invariant (conservation) suite
 - `adapter/` — the off-chain evidence adapter: canonical sha256-committed evidence bundles matching the contract's on-chain commitments

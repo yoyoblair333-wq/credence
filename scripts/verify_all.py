@@ -53,6 +53,7 @@ CONTRACTS = [
     "contracts/credence_gated.py",
     "contracts/credence_governor.py",
     "contracts/credence_passport.py",
+    "primitives/credit_passport/credit_passport.py",
 ]
 
 IS_WIN = os.name == "nt"
@@ -146,6 +147,13 @@ def build_gates() -> list:
         group="pytest",
         name="pytest tests/direct",
         cmd=([py, "-m", "pytest", "tests/direct", "-q"] if has_pytest else None),
+        cwd=ROOT,
+        skip_hint="pip install genlayer-test pytest",
+    ))
+    gates.append(Gate(
+        group="pytest",
+        name="pytest primitives/credit_passport/tests",
+        cmd=([py, "-m", "pytest", "primitives/credit_passport/tests", "-q"] if has_pytest else None),
         cwd=ROOT,
         skip_hint="pip install genlayer-test pytest",
     ))
