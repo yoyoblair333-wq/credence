@@ -137,12 +137,14 @@ import type { EvidenceDraft } from "@credence/sdk";
 
 const credence = new CredenceClient(client, CONTRACT_ADDRESS);
 
-// Evidence is an array of { kind: "text" | "url" | "image", label, content }.
-// A url whose page displays the borrower's own wallet address proves control
-// and unlocks grades above the unowned cap ("C"). An image item points at an
-// https page the panel renders to a screenshot and vision-judges (at most one
-// image per application); text and image evidence can never prove ownership.
+// Evidence is an array of { kind: "domain" | "text" | "url" | "image", label, content }.
+// FIRST publish your token (read `ownership_challenge(yourAddress)`) as a line of
+// https://example.com/.well-known/credence-verify.txt, then add a `domain` item.
+// Only a proven domain unlocks a credit line (and grades above "C"); url items
+// count as yours only on a proven host. Displaying an address on a page proves
+// nothing. Text and image evidence can never prove ownership.
 const evidence: EvidenceDraft[] = [
+  { kind: "domain", label: "Ownership proof", content: "example.com" },
   { kind: "url",   label: "Revenue dashboard", content: "https://example.com/metrics" },
   { kind: "image", label: "Analytics screenshot", content: "https://example.com/chart" },
   { kind: "text",  label: "Context", content: "18 months of on-time vendor payments." },

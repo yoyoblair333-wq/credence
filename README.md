@@ -2,12 +2,23 @@
 
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
-**Live app:** https://yoyoblair333-wq.github.io/credence/ · connected to the live Credence v1.4 core on GenLayer studionet (`0x8D9F4365b39bD2646d18e6ceCc9758344605f9ED`, chain 61999)
+**Live app:** https://yoyoblair333-wq.github.io/credence/ · connected to the live Credence **v2.0** core on GenLayer studionet (`0x0e0fc114ed62881740b9Be8b5ee8d39671A4c68b`, chain 61999)
 
 **Reputation-underwritten, *undercollateralized* credit for the agentic economy —
 a loan decided by an on-chain AI panel that reads a borrower's own public
 evidence, under consensus, before a single token moves.**
 
+> **v2.0 — steward review fixes ([docs/V2_SECURITY_FIXES.md](docs/V2_SECURITY_FIXES.md)).**
+> (1) **Authenticated ownership, no proof no line:** showing an address on a page no longer
+> proves anything. A borrower proves a domain by publishing a rotating, address-bound token
+> at `https://<domain>/.well-known/credence-verify.txt`, a URL the contract builds itself;
+> a domain binds to one borrower; without a proven domain the **credit limit is zero**.
+> (2) **Complete bad-debt lifecycle:** default → **write-off** (protocol revenue is the
+> first-loss reserve, then a **pro-rata lender loss** through a share index, so nobody exits
+> at par ahead of a loss) → **recovery** (lenders made whole first, then the reserve).
+> **33 methods** (13 view, 20 write); **83 tests** green (75 scenario + 8 property/invariant,
+> with new loss-allocation invariants fuzzed across six seeds).
+>
 > **v1.4.** Adds **time-based interest accrual** — a configurable APR (`interest_bps`,
 > **off by default**) on outstanding principal, accrued lazily against the consensus clock
 > and **fixed per line at draw** so enabling it never retro-charges an existing line; total
@@ -252,10 +263,11 @@ separators=(",", ":"), ensure_ascii=True))` — and stored as the on-chain commi
 inside one field can never collide with a field boundary; this is the exact digest the
 off-chain evidence adapter reproduces.) After assessment, each URL item's
 `fetched_excerpt` (clipped to 600 chars), `fetched_sha256`, and `ownership_proven`
-(true when the fetched page displayed the borrower's own wallet address) are folded
-back into the stored evidence as an audit trail of what the leader actually read.
-Without at least one ownership-proven item the binding grade is capped at
-`unowned_grade_cap` ("C").
+(true for a `domain` item whose /.well-known token verified, and for a `url` hosted on
+such a domain) are folded back into the stored evidence as an audit trail of what the
+leader actually read. Without a proven domain the binding grade is capped at
+`unowned_grade_cap` ("C") **and the credit limit is zero** (see
+[docs/V2_SECURITY_FIXES.md](docs/V2_SECURITY_FIXES.md)).
 
 ### Admin (write, role-gated)
 
@@ -346,8 +358,8 @@ JusticeUpgrade milestone's `adapter/`.)
 `frontend/` is a **Next.js** dApp that lets a borrower submit evidence, watch the
 consensus panel grade it, draw and repay, and lets a lender fund **and redeem**
 (`defund`) pool liquidity and see protocol revenue. It surfaces the product's
-identity-binding rule directly — grades are capped at **C** until a cited page proves
-wallet ownership — and runs fully in a read-only **preview mode** (representative
+identity-binding rule directly — no credit line until the borrower proves a domain with
+their one-time /.well-known token (shown in the form) — and runs fully in a read-only **preview mode** (representative
 mock data, a local stand-in panel) when no contract address is configured.
 
 > Status: **wired to the contract interface and building clean** — `npx tsc --noEmit` and `npx next build`
@@ -428,7 +440,7 @@ The full analysis, including residual risks and assumptions, is in
   of origination fees through an O(1) accumulator (`acc_yield_per_share`) and redeem
   principal with `defund` / claim yield with `claim_yield`; the origination fee is
   risk-priced per grade. Still roadmap: a variable ongoing APR to lenders (beyond the
-  origination-fee share), explicit per-lender loss tracking on default, and
+  origination-fee share) and
   jury/token-curated underwriter panels (the fixed three-persona panel is a deliberate
   first step).
 

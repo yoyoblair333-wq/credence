@@ -34,9 +34,11 @@ pattern references [`frontend/lib/contracts/Credence.ts`](../frontend/lib/contra
 
 - **Addresses** are `0x`-prefixed, 40 hex chars; the contract validates with `_addr_hex`
   and reverts `address must be 0x followed by 40 hex characters` otherwise.
-- **Identity-bound cap:** without at least one ownership-proven URL exhibit (a cited page
-  that displays the applicant's own wallet address), the grade is capped at **`C`**
-  (`UNOWNED_GRADE_CAP`). Reaching `A`/`AA`/`AAA` requires ownership-proven evidence.
+- **Authenticated ownership (v2.0):** ownership is proven only by a `domain` exhibit whose
+  `https://<domain>/.well-known/credence-verify.txt` carries the borrower's one-time token
+  (read it with `ownership_challenge(addr)`). Without it the grade is capped at **`C`** and the
+  **credit limit is zero**; `credit_of` reports `ownership_proven` and `is_creditworthy`
+  returns false for unproven borrowers, so a C grade alone never gates anything.
 - **Reads return a safe default** for unknown addresses — `credit_of` →
   `{known: false, grade: "DENY", …}`, `is_creditworthy` → `false` — so a consumer can
   never be tricked into trusting an address Credence has not assessed.
@@ -234,9 +236,9 @@ def repay(self) -> dict                           # send native value; principal
    input. An image carries no wallet-address ownership proof, so it is always
    `ownership: unproven` and, on its own, cannot lift the grade above the `C` cap.
 
-   To reach a grade above `C`, include at least one `url` exhibit whose page displays the
-   borrower's own wallet address (ownership proof); `text` and `image` exhibits are always
-   unproven and capped.
+   To get any credit line, include a `domain` exhibit whose /.well-known file carries the
+   borrower's token; `url` exhibits count as owned only on that proven host, and `text` and
+   `image` exhibits are always unproven.
 
 2. **`assess(borrower)`** — **anyone** can trigger it (keeper, the borrower, or staff). It
    runs the 3-persona consensus panel inside the GenVM: each URL is fetched live

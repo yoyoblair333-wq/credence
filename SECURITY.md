@@ -67,12 +67,26 @@ risks, and `docs/AUDIT.md` for the independent pre-submission audit (no critical
   returns `False` in `validator_fn`, so **no assessment is written and no credit is
   extended**. Safety is preferred over liveness throughout.
 
-- **Identity-bound credit cap.** Evidence counts as the applicant's own only when a cited
-  page displays the applicant's own wallet address (a DNS-TXT-style ownership challenge,
-  checked deterministically against the fetched text: `applicant_l in fetched.lower()`).
-  Without at least one ownership-proven item the grade is capped at `UNOWNED_GRADE_CAP`
-  (`"C"`, a 100-token line) by `_cap_grade`, so a successful prompt injection — or
-  borrowing against a stranger's reputation — still cannot mint a large line.
+- **Authenticated ownership; no proof, no line (v2.0).** Displaying an address on a page
+  proves nothing (comments, profiles and search pages echo arbitrary text), so v2.0
+  removed that check. Ownership is proven ACME http-01 style: the borrower lists a bare
+  `domain`, and the contract itself fetches `https://<domain>/.well-known/credence-verify.txt`
+  (fixed path, no query, no user-controlled URL) and requires a one-time token bound to
+  (contract, borrower, request sequence) on its own line. The token rotates on every
+  `request_credit`, a proven domain binds to exactly one borrower (`domain_owner`), and a
+  `url` item counts as owned only when hosted on a domain proven in the same application.
+  Every validator re-derives the proven-domain list. **Without a proven domain the
+  credit limit is zero** and `draw` reverts; the applicant keeps at most a public
+  reputation grade of `C`, which the `credit_of` / `is_creditworthy` oracle also refuses
+  to treat as usable credit. Unauthenticated claims can never gate lender funds.
+- **Complete bad-debt lifecycle (v2.0).** A default is written off the moment it is
+  recognised (by `service_book` or inline on any `draw`/`repay`): the line leaves the
+  book, protocol revenue absorbs the principal loss first (first-loss reserve), and any
+  remainder is socialised pro-rata across lenders through a share index, so no lender
+  can exit at par ahead of a recognised loss. The full debt stays owed as
+  `recovery_owed`; recoveries restore lenders first, then the reserve, then count as
+  revenue. Loss allocation is conserved exactly (`written_off_principal ==
+  reserve_losses + lender_losses + unallocated_loss`) and fuzz-tested.
 
 - **Consensus re-derivation.** The panel runs inside `gl.vm.run_nondet_unsafe`. The
   leader produces a grade; every validator **re-fetches every URL and re-judges every

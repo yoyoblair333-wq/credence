@@ -154,6 +154,33 @@ export function useCreditOf(lookupAddr: string | null | undefined) {
 }
 
 /**
+ * The borrower's current ownership-proof token (ownership_challenge). In demo
+ * mode a clearly-labelled placeholder is returned.
+ */
+export function useOwnershipChallenge(lookupAddr: string | null | undefined) {
+  const contract = useCredenceContract();
+  const demo = useIsDemoMode();
+  const addr = (lookupAddr || "").trim();
+  const wellFormed = /^0x[a-fA-F0-9]{40}$/.test(addr);
+  return useQuery<{ token: string; path: string } | null, Error>({
+    queryKey: ["ownershipChallenge", addr, demo],
+    queryFn: () => {
+      if (demo)
+        return Promise.resolve({
+          token: "credence-verify=<connect a wallet on the live contract>",
+          path: "/.well-known/credence-verify.txt",
+        });
+      if (!contract) return Promise.resolve(null);
+      return contract.getOwnershipChallenge(addr);
+    },
+    enabled: wellFormed && (demo ? true : !!contract),
+    staleTime: 5000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+}
+
+/**
  * One-call creditworthiness gate (is_creditworthy): does `addr` currently hold
  * at least `minGrade` and is not in default. Only runs for a well-formed address.
  */

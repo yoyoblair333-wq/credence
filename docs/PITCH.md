@@ -46,10 +46,10 @@ capability GenLayer exists to provide.
   collateral; the line is underwritten purely on evidence and reputation, with a concrete
   grade→line map (`DENY`/`C`/`B`/`A`/`AA`/`AAA` → 0/100/250/500/1000/2500 tokens). The
   first GenLayer contract to gate real native-token value on consensus AI judgment.
-- **Identity-bound evidence.** A cited page only counts as *yours* when it displays your
-  own `0x…` wallet address — a DNS-TXT-style ownership challenge checked deterministically
-  on the fetched text. Without a proven item the grade is **capped at C** no matter how
-  enthusiastic the panel, and the cap is enforced in code and **re-derived by every
+- **Authenticated, identity-bound evidence.** Evidence counts as *yours* only on a domain
+  where you published your one-time token at a `/.well-known` path the contract builds
+  itself (ACME-style). Without a proven domain the grade is **capped at C and the credit
+  limit is zero** no matter how enthusiastic the panel, and the cap is enforced in code and **re-derived by every
   validator** (so it does not rely on the model obeying). This closes the
   borrow-against-a-stranger's-reputation attack.
 - **A real two-sided market — lenders earn fees *and* interest.** Lenders fund a native

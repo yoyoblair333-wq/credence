@@ -177,41 +177,47 @@ A naive version of this protocol has an obvious exploit: cite *someone else's* r
 and borrow against reputation you don't own. Credence closes this with an **ownership proof**
 that is checked deterministically, in code, by every validator — not left to the LLM's goodwill.
 
-The rule (a DNS-TXT-style challenge, in `leader_fn`):
+The rule (an ACME http-01-style challenge, in `leader_fn`, since v2.0):
 
-> A `url` exhibit counts as the applicant's *own* only if the **fetched page text displays the
-> applicant's own wallet address**. Concretely: `applicant_address.lower() in fetched_text.lower()`.
+> A `domain` exhibit is PROVEN only if `https://<domain>/.well-known/credence-verify.txt` — a URL
+> the **contract builds itself** — contains, on its own line, the applicant's one-time token
+> `credence-verify=<sha256(contract | applicant | request_seq)[:32]>`. A `url` exhibit counts as
+> the applicant's own only if it is hosted on a domain proven in the same application.
 
-To prove you control a page, you publish your `0x…` address on it. Anyone can *link* to Stripe's
-homepage; only the person who controls *their* Stripe/GitHub/explorer page can make it display
-*their* wallet address.
+Merely *displaying* an address proves nothing — anyone can paste an address into a comment, a
+profile or a search box that echoes it. Only whoever controls a domain's web root can publish a
+file at its fixed `/.well-known` path. The token is bound to the applicant's address (copying
+someone else's is useless), rotates on every request (no stale proofs), and a proven domain binds
+to exactly one borrower.
 
 The teeth are in the **cap** (`_cap_grade`):
 
 ```
-cap   = AAA (the full ladder)   if at least one URL proved ownership
+cap   = AAA (the full ladder)   if at least one domain proved ownership
       = C   (UNOWNED_GRADE_CAP)  otherwise
 grade = min(strict_majority_floor, cap)
+limit = GRADE_TOKENS[grade]      if a domain was proven
+      = 0                        otherwise   (no proof, no line)
 ```
 
-So **without ownership proof, the grade is capped at C (100 tokens) no matter what the panel
-says.** A second worked example makes this vivid:
+So **without ownership proof, the grade is capped at C and the credit limit is ZERO no matter
+what the panel says** — unauthenticated claims never touch lender funds. A second worked example makes this vivid:
 
 ```
 votes = [AAA, AAA, AAA]   (a unanimous, maximally enthusiastic panel)
-no ownership-proven URL exhibit
+no proven domain
 
   strict-majority floor = AAA
   cap                   = C          (nothing proved ownership)
-  binding grade         = min(AAA, C) = C   →  100-token line, not 2,500
+  binding grade         = min(AAA, C) = C   →  reputation grade only, credit limit 0
 ```
 
 The panel can love you all it wants; with nothing proving the evidence is *yours*, the line is
-C. Crucially, this cap is enforced in Python **and re-derived by every validator** (the validator
+C with no line. Crucially, this cap is enforced in Python **and re-derived by every validator** (the validator
 re-agrees `any_owned`, not just the grade — `validator_fn`), so it holds even if an LLM is
 jailbroken into ignoring the instruction. `text` and `image` exhibits can **never** prove
 ownership (text isn't a live, controllable page; a screenshot carries no verifiable address bind),
-so they are always capped at C on their own.
+so on their own they never unlock credit.
 
 This is also the protocol's defense against prompt injection. Every borrower field and every byte
 fetched from the web is treated as **untrusted data, never instructions**: a write-time injection

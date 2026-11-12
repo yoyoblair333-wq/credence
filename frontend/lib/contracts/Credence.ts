@@ -1,6 +1,6 @@
 import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
-import type {
+import type { OwnershipChallenge,
   Borrower,
   Pool,
   Stats,
@@ -220,6 +220,19 @@ class Credence {
       args: [borrower],
     });
     return normalize(result) as CreditRecord;
+  }
+
+  /**
+   * The one-time ownership token this borrower must publish at
+   * https://<domain>/.well-known/credence-verify.txt before request_credit.
+   */
+  async getOwnershipChallenge(borrower: string): Promise<OwnershipChallenge> {
+    const result = await this.client.readContract({
+      address: this.contractAddress,
+      functionName: "ownership_challenge",
+      args: [borrower],
+    });
+    return normalize(result) as OwnershipChallenge;
   }
 
   /**

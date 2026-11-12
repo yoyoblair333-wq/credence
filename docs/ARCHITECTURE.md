@@ -116,10 +116,13 @@ are reachable from the leader.
    - `url` items are fetched live with `gl.nondet.web.render(url, mode="text")`, clipped
      to `MAX_FETCH_CHARS` (2400) and neutralised. A fetch that raises becomes the fixed
      placeholder `[the page at this URL could not be retrieved]` (so every node sees the
-     same text). **Ownership** is decided here: `owned = applicant_address.lower() in
-     fetched_text.lower()` — the cited page proves control iff it *displays the
-     applicant's own wallet address*. A per-URL `snapshot` (excerpt, `fetched_sha256`,
-     `ownership_proven`) is recorded for the audit trail.
+     same text). A URL is owned iff its host is a domain proven in step 0. A per-URL
+     `snapshot` (excerpt, `fetched_sha256`, `ownership_proven`) is recorded for the audit trail.
+   - **Step 0 (v2.0), ownership:** for each `domain` item the contract fetches
+     `https://<domain>/.well-known/credence-verify.txt` (a URL it builds itself) and marks
+     the domain proven iff the applicant's one-time token
+     (`sha256(contract|applicant|request_seq)`) is a whole line of it and the domain is not
+     bound to another borrower. Validators re-agree the proven list.
 2. **Panel.** Build one prompt per persona (`PANEL_SIZE = 3`: CASHFLOW, HISTORY, RISK),
    each embedding the application, the protocol-verified reputation block, and the
    fenced `<<<EVIDENCE>>> … <<<END_EVIDENCE>>>` block. Each prompt is sent to
@@ -388,12 +391,15 @@ and are deliberately outside the conservation equation.
 **Why.** Without identity binding, a borrower could cite a *stranger's* revenue page and
 borrow against reputation they do not own — the core undercollateralized-lending abuse.
 
-**Mechanism (a DNS-TXT-style challenge, checked deterministically).** During
-`leader_fn`, a URL item is `ownership: PROVEN` iff the **fetched page text contains the
-applicant's own `0x…` address** (case-insensitive substring: `applicant.lower() in
-fetched.lower()`). To prove control of a cited page you must publish your own wallet
-address on it. `text` evidence is always `unproven` (its content is not a live,
-controllable page).
+**Mechanism (v2.0: an ACME http-01-style challenge, checked deterministically).** The old
+rule ("the page displays the applicant's address") was removed: any echo page, comment or
+profile can display an address. Now a `domain` item is PROVEN iff the contract-built URL
+`https://<domain>/.well-known/credence-verify.txt` contains the applicant's one-time token on
+its own line; the token is bound to (contract, applicant, request sequence) and rotates on
+every request; a proven domain binds to one borrower (`domain_owner`). A `url` item is PROVEN
+iff hosted on a proven domain. `text` and `image` evidence are always `unproven`. **Without a
+proven domain the credit limit is zero** (no proof, no line), so unauthenticated claims never
+gate lender capital.
 
 **Effect on the grade.** `any_owned` is true iff *some* URL item proved ownership. The
 binding grade is capped:

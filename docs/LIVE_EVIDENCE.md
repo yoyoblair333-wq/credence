@@ -10,6 +10,19 @@ Bradbury** (chain 4221), which is pending a faucet captcha and is NOT represente
 
 Every item below is real output captured from a live run; nothing is fabricated.
 
+## 0. v2.0.0: steward attack replayed live (2026-11-12)
+
+Contract **`0x0e0fc114ed62881740b9Be8b5ee8d39671A4c68b`** (v2.0.0, `get_config().version`):
+- `ownership_challenge(borrower)` returned the rotating token
+  `credence-verify=4fb9200f364b1c0652094316ff1e6489` and path `/.well-known/credence-verify.txt`.
+- `fund` (payable): pool cash 500 GEN, `share_index` 1e18.
+- `request_credit` with ONLY a URL that echoes the borrower's address in its query string
+  (the steward's "displaying an address" attack), then consensus `assess`
+  `0x573bbd7a73137711c6b8fc414006c6b005feec055492a6f67b3edd32e6cc2d4f`:
+  **`ownership_proven = false`, `credit_limit = 0`, grade `DENY`**.
+- `draw(1 GEN)` `0x2d1e94db701f8a3ab71be411e3e5ea883aac60fa498bee019be7d349a8187700`:
+  **rolled back**; pool cash still 500 GEN, `outstanding_principal` 0.
+
 ## 1. Core: deploy + payable fund + consensus assess (2026-11-03)
 
 Full core run (`scripts/` / scratchpad `credence_fullrun.py`), contract

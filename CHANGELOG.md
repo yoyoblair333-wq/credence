@@ -8,6 +8,39 @@ truth for the deployed release.
 
 `#CreditWithoutCollateral` · GenLayer referral `JTR01FHP`
 
+## [2.0.0] - 2026-11-12
+
+Steward-review release. Fixes both findings from the declined v1.4 Builder Project review;
+details, attack-by-attack tests and live evidence in
+[`docs/V2_SECURITY_FIXES.md`](docs/V2_SECURITY_FIXES.md).
+
+### Security
+- **Removed address-on-page ownership.** `applicant in fetched_text` let any echo page,
+  comment or profile "prove" ownership. Replaced by an ACME http-01-style `domain` evidence
+  kind: the contract fetches `https://<domain>/.well-known/credence-verify.txt` itself and
+  requires a token bound to (contract, borrower, request sequence) on its own line. Tokens
+  rotate on every `request_credit`; a proven domain binds to one borrower (`domain_owner`);
+  a `url` item is owned only on a proven host; validators re-agree the proven-domain list.
+- **No proof, no line.** Unproven applicants get `credit_limit = 0` (reputation grade capped
+  at `C`); `draw` reverts; `credit_of` / `is_creditworthy` treat them as not creditworthy.
+
+### Added
+- **Bad-debt lifecycle:** write-off on default recognition, first-loss reserve (protocol
+  revenue), pro-rata lender loss via a share index (lender capital is now share-based),
+  `recovery_owed` with lenders-first recovery, and a block on new credit or appeal while
+  written-off debt is unpaid.
+- Views `ownership_challenge`, `domain_owner_of`; pool fields `share_index`,
+  `total_written_off`, `written_off_principal`, `total_recovered`, `lender_losses`,
+  `reserve_losses`, `unallocated_loss`; borrower fields `recovery_owed`, `written_off`,
+  `verified_domains`, `proof_seq`; events `WrittenOff`, `Recovered`, `DomainVerified`.
+- 13 new scenario tests (incl. domain-squatting); fuzz invariants INV14 (loss allocation) and INV15 (recovery books).
+- Frontend: a Domain evidence type showing the connected wallet's live token; unproven
+  results show a zero limit. Fixed the text-evidence box, which did not accept typing.
+
+### Changed
+- `VERSION` 2.0.0. Storage layout changed (new deployment):
+  `0x0e0fc114ed62881740b9Be8b5ee8d39671A4c68b` on studionet.
+
 ## [1.4.0] - 2026-11-03
 
 Time-based interest and reputation-primitive release: credit lines can carry a time-based

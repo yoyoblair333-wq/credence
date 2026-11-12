@@ -35,13 +35,24 @@ export type BorrowerStatus =
 
 /**
  * The kind of a single evidence item.
+ *  - `domain`: a bare hostname the applicant controls. The CONTRACT fetches
+ *              https://<domain>/.well-known/credence-verify.txt and requires the
+ *              applicant's one-time token (`ownership_challenge`) on its own line.
+ *              This is the ONLY way to prove ownership and unlock a credit line.
+ *  - `url`   : an https page every validator fetches live; counts as the
+ *              applicant's own only when hosted on a domain they just proved.
  *  - `text`  : free text the panel reads as-is (can never prove ownership).
- *  - `url`   : an https page every validator fetches live; proves ownership when
- *              the fetched page displays the applicant's wallet address.
  *  - `image` : an https page rendered to a screenshot and vision-judged by the
  *              panel (multimodal). Image evidence is never identity-proven.
  */
-export type EvidenceKind = "text" | "url" | "image";
+export type EvidenceKind = "text" | "url" | "image" | "domain";
+
+/** The ownership challenge a borrower publishes before request_credit. */
+export interface OwnershipChallenge {
+  addr: string;
+  token: string;
+  path: string;
+}
 
 /** Ordered grade list and the credit line (in whole tokens) each grade unlocks. */
 export const GRADES: Grade[] = ["DENY", "C", "B", "A", "AA", "AAA"];

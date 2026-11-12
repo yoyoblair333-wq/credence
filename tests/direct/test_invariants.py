@@ -100,6 +100,24 @@ def set_chain_time(iso):
     _g.message_raw["datetime"] = iso
 
 
+def host_for(b):
+    return f"b{addr_str(b).lower()[2:12]}.example.com"
+
+
+def token_at(vm, b, seq):
+    import hashlib
+    ca = "0x" + bytes(vm._contract_address).hex()
+    raw = f"credence-proof|{ca.lower()}|{addr_str(b).lower()}|{seq}"
+    return "credence-verify=" + hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+
+def mock_proof(vm, b, token):
+    dom = host_for(b)
+    vm.mock_web(rf"https://{dom.replace('.', chr(92) + '.')}/\.well-known/credence-verify\.txt",
+                {"status": 200, "body": token + "\n"})
+    return {"kind": "domain", "label": "Domain ownership proof", "content": dom}
+
+
 def epoch_to_iso(epoch_seconds):
     import datetime as _dt
     return _dt.datetime.fromtimestamp(epoch_seconds, _dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -262,12 +280,33 @@ def _assert_invariants(c, m: Model, note=""):
             f"[INV9 principal<=limit] {b['addr']} principal={b['principal']} "
             f"> limit={b['credit_limit']} ({note})")
 
-    # INV6: sum of lender capital == total_funded (contract AND model agree).
+    # INV6: sum of lender capital == total_funded (contract AND model agree). Exact
+    # while no write-off has moved the share index; afterwards each lender's balance
+    # is floor(shares * index), so the sum may trail the pool total by < 1 unit per
+    # lender, and the model re-syncs from the contract (losses are not driver-chosen).
     sum_funded = sum(int(c.lender_balance(addr_str(l))["funded"]) for l in m.lenders)
-    assert sum_funded == int(pool["total_funded"]), (
-        f"[INV6 sum-funded] sum={sum_funded} != total_funded={pool['total_funded']} ({note})")
-    assert sum_funded == sum(m.funded.values()), (
-        f"[INV6 sum-funded/model] contract={sum_funded} != model={sum(m.funded.values())} ({note})")
+    if int(pool["share_index"]) == ACC_SCALE:
+        assert sum_funded == int(pool["total_funded"]), (
+            f"[INV6 sum-funded] sum={sum_funded} != total_funded={pool['total_funded']} ({note})")
+        assert sum_funded == sum(m.funded.values()), (
+            f"[INV6 sum-funded/model] contract={sum_funded} != model={sum(m.funded.values())} ({note})")
+    else:
+        assert 0 <= int(pool["total_funded"]) - sum_funded <= len(m.lenders), (
+            f"[INV6 sum-funded/indexed] sum={sum_funded} total={pool['total_funded']} ({note})")
+        for l in m.lenders:
+            m.funded[key(l)] = int(c.lender_balance(addr_str(l))["funded"])
+
+    # INV14: every written-off unit of principal is allocated exactly once - to the
+    # first-loss reserve, to lenders, or recorded as unallocated.
+    assert int(pool["written_off_principal"]) == (
+        int(pool["reserve_losses"]) + int(pool["lender_losses"]) + int(pool["unallocated_loss"])), (
+        f"[INV14 loss-allocation] {pool} ({note})")
+    # INV15: per-borrower write-off / recovery books reconcile with the pool.
+    sum_wo = sum(int(b["written_off"]) for b in borrowers)
+    sum_rec_owed = sum(int(b["recovery_owed"]) for b in borrowers)
+    assert sum_wo == int(pool["total_written_off"]), f"[INV15 wo-sum] ({note})"
+    assert sum_rec_owed == int(pool["total_written_off"]) - int(pool["total_recovered"]), (
+        f"[INV15 recovery-owed] {sum_rec_owed} ({note})")
 
     # INV8: no lender set can claim more yield than was ever distributed.
     yield_distributed = int(pool["yield_distributed"])
@@ -399,9 +438,10 @@ class Driver:
         self.vm.value = 0
         self.vm.clear_mocks()
         if owned:
-            url = f"https://proof.example.com/{bh.lower()}/{self.nonce}"
-            evidence = [{"kind": "url", "label": "Ownership + revenue", "content": url}]
-            body = f"Owner wallet {bh}. Verified recurring revenue over a 36-month history."
+            url = f"https://{host_for(b)}/revenue/{self.nonce}"
+            proof = mock_proof(self.vm, b, self.c.ownership_challenge(bh)["token"])
+            evidence = [proof, {"kind": "url", "label": "Revenue", "content": url}]
+            body = "Verified recurring revenue over a 36-month history."
         else:
             evidence = [{"kind": "text", "label": "Self-reported",
                          "content": f"Recurring monthly revenue, reference {self.nonce}."}]
@@ -456,6 +496,8 @@ class Driver:
         # owed MUST include accrued interest now that the driver runs with an APR
         # enabled: principal + fee + interest is the true debt (contract `owed`).
         owed = int(rec["principal"]) + int(rec["fee_accrued"]) + int(rec["interest_accrued"])
+        if owed == 0 and int(rec["recovery_owed"]) > 0:
+            owed = int(rec["recovery_owed"])          # recovery of written-off debt
         if owed == 0:
             value = self.rng.randint(1, 3) * TOK      # reverts: nothing outstanding
         elif self.rng.random() < 0.2:
@@ -543,7 +585,8 @@ class Driver:
         # Deterministic mocks in case the appeal actually runs its panel (re-fetches
         # stored URL evidence and re-judges). Reverts short-circuit before any of this.
         self.vm.clear_mocks()
-        self.vm.mock_web(r"proof\.example\.com",
+        mock_proof(self.vm, b, token_at(self.vm, b, int(self.c.get_borrower(bh)["proof_seq"])))
+        self.vm.mock_web(r"example\.com",
                          {"status": 200, "body": "Recurring revenue; stable operating history."})
         self.vm.mock_llm(r"impartial credit underwriter",
                          grade_reply(self.rng.choice(GRADES_APPROVABLE)))
@@ -648,7 +691,9 @@ def test_invariants_under_randomized_operations(direct_vm, deployed, actors):
           f"max_interest_outstanding={max_interest} "
           f"final_cash={pool['cash']} total_drawn={pool['total_drawn']} "
           f"outstanding_interest={pool['outstanding_interest']} "
-          f"yield_distributed={pool['yield_distributed']}")
+          f"yield_distributed={pool['yield_distributed']} "
+          f"written_off={pool['total_written_off']} recovered={pool['total_recovered']} "
+          f"lender_losses={pool['lender_losses']} reserve_losses={pool['reserve_losses']}")
 
 
 # --------------------------------------------------------------------------- #
@@ -668,10 +713,8 @@ def _apply_and_assess(vm, c, borrower, g, tokens=100, owned=True):
     vm.value = 0
     bh = addr_str(borrower)
     if owned:
-        url = f"https://proof.example.com/{bh.lower()}"
-        evidence = [{"kind": "url", "label": "proof", "content": url}]
-        c.request_credit(SAFE_PURPOSE, tokens, json.dumps(evidence))
-        vm.mock_web(url, {"status": 200, "body": f"Owner wallet {bh}. Strong current revenue."})
+        proof = mock_proof(vm, borrower, c.ownership_challenge(bh)["token"])
+        c.request_credit(SAFE_PURPOSE, tokens, json.dumps([proof]))
     else:
         evidence = [{"kind": "text", "label": "x", "content": "Self-reported revenue."}]
         c.request_credit(SAFE_PURPOSE, tokens, json.dumps(evidence))

@@ -67,7 +67,7 @@ export function AssessmentResult({
 
   const grade = borrower.grade as Grade;
   const isDeny = grade === "DENY";
-  const lineTokens = GRADE_TOKENS[grade] ?? 0;
+  const lineTokens = borrower.ownership_proven ? (GRADE_TOKENS[grade] ?? 0) : 0;
   const ownershipProven = !!borrower.ownership_proven;
   const votes = borrower.grade_votes ?? [];
   const nPanel = votes.length || config?.panel_size || 3;
@@ -111,7 +111,7 @@ export function AssessmentResult({
         appealPanel,
         true
       );
-      const limitTokens = GRADE_TOKENS[g];
+      const limitTokens = op ? GRADE_TOKENS[g] : 0;
       const now = new Date().toISOString();
       await new Promise((r) => setTimeout(r, 1100));
       setLocalAppealing(false);
@@ -200,19 +200,20 @@ export function AssessmentResult({
           <div className="flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
             <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
             <p className="text-xs text-emerald-800 dark:text-emerald-200/90 leading-relaxed">
-              <span className="font-semibold">Ownership verified.</span> At least one
-              cited page displayed this wallet&apos;s address, so the evidence is proven
-              to be the applicant&apos;s own — the grade is not capped.
+              <span className="font-semibold">Ownership verified.</span> The applicant
+              published their one-time token at a domain&apos;s /.well-known path, so
+              evidence on that domain is proven theirs — the grade is not capped and the
+              credit line is live.
             </p>
           </div>
         ) : (
           <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
             <ShieldAlert className="w-4 h-4 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-800 dark:text-amber-200/90 leading-relaxed">
-              <span className="font-semibold">Unverified — capped at C.</span> No cited
-              page displayed this wallet&apos;s address, so ownership is unproven and the
-              line is held at the C cap. Add a URL whose page shows your connected
-              address to unlock higher grades.
+              <span className="font-semibold">Unverified — no credit line.</span> No domain
+              ownership proof was verified, so this is a public reputation grade only
+              (max C) and the credit limit is zero. Publish your token at
+              /.well-known/credence-verify.txt on a domain you control and reapply.
             </p>
           </div>
         ))}

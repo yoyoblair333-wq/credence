@@ -30,14 +30,19 @@ export type BorrowerStatus =
 
 /**
  * The kind of a single evidence item.
+ *  - `domain`: a bare hostname. The contract fetches
+ *              https://<domain>/.well-known/credence-verify.txt and requires the
+ *              borrower's one-time token (`ownership_challenge`) on its own line.
+ *              The ONLY way to prove ownership; no proof means a zero credit limit.
  *  - `text`  : free text the panel reads as-is (can never prove ownership).
- *  - `url`   : an https page every validator fetches live; proves ownership when
- *              the fetched page displays the applicant's wallet address.
+ *  - `url`   : an https page every validator fetches live; counts as the
+ *              applicant's own only when hosted on a domain proven in the same
+ *              application.
  *  - `image` : an https page rendered to a screenshot and vision-judged by the
  *              panel (multimodal). Image evidence is never identity-proven, and at
  *              most one image item is allowed per application.
  */
-export type EvidenceKind = "text" | "url" | "image";
+export type EvidenceKind = "text" | "url" | "image" | "domain";
 
 /** One underwriter panelist's bounded grade vote. */
 export type GradeVote = Grade;

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Direct-mode tests for Credence â€” reputation-underwritten undercollateralized credit.
 
 Real GenVM Python SDK in-process; the underwriter LLM is mocked by regex
@@ -63,6 +63,32 @@ def addr_str(a):
     return str(a)
 
 
+def host_for(borrower):
+    """A distinct domain per borrower (a proven domain binds to exactly one borrower)."""
+    return f"b{addr_str(borrower).lower()[2:12]}.example.com"
+
+
+def token_at(vm, borrower, seq):
+    """Recompute the contract's ownership token for a given request sequence."""
+    import hashlib
+    ca = "0x" + bytes(vm._contract_address).hex()
+    raw = f"credence-proof|{ca.lower()}|{addr_str(borrower).lower()}|{seq}"
+    return "credence-verify=" + hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+
+def prove_domain(vm, c, borrower, domain=None, body_extra="", seq=None):
+    """Publish this borrower's ownership token at the contract-built
+    /.well-known path of `domain`, exactly as a real borrower would before
+    request_credit (seq=None: the token for the NEXT request). Returns the
+    `domain` evidence item."""
+    domain = domain or host_for(borrower)
+    tok = (c.ownership_challenge(addr_str(borrower))["token"] if seq is None
+           else token_at(vm, borrower, seq))
+    vm.mock_web(rf"https://{domain.replace('.', chr(92) + '.')}/\.well-known/credence-verify\.txt",
+                {"status": 200, "body": f"# credence ownership\n{tok}\n{body_extra}"})
+    return {"kind": "domain", "label": "Domain ownership proof", "content": domain}
+
+
 @pytest.fixture
 def credence(direct_vm, direct_deploy, direct_alice):
     direct_vm.sender = direct_alice           # deployer = owner/relayer/dev
@@ -70,18 +96,20 @@ def credence(direct_vm, direct_deploy, direct_alice):
 
 
 def apply_and_assess(vm, c, borrower, g="A", purpose=PURPOSE, tokens=500, evidence=None, owned=True):
-    """Apply and run the panel. By default includes an ownership-PROVEN URL (a page
-    whose fetched body displays the borrower's own address), so grades above the
-    unowned cap (C) are reachable. Pass owned=False to test the cap."""
+    """Apply and run the panel. By default proves control of a domain (the
+    contract-built /.well-known token file) and cites a revenue page on it, so grades
+    above the unowned cap (C) and a real credit line are reachable. Pass owned=False
+    to test the no-proof path."""
     vm.clear_mocks()   # LLM/web mocks accumulate and match first-wins; start clean
     vm.sender = borrower
     bh = addr_str(borrower)
     if evidence is None:
         if owned:
-            url = f"https://proof.example.com/{bh.lower()}"
-            evidence = [ev_url("Ownership + revenue", url)]
+            dom = host_for(borrower)
+            url = f"https://{dom}/revenue"
+            evidence = [prove_domain(vm, c, borrower), ev_url("Revenue", url)]
             vm.mock_web(url, {"status": 200,
-                              "body": f"Owner wallet {bh}. Verified revenue, 36-month history, low risk."})
+                              "body": "Verified revenue, 36-month history, low risk."})
         else:
             evidence = [ev_text("Self-reported income", "I earn plenty, trust me.")]
     c.request_credit(purpose, tokens, json.dumps(evidence))
@@ -120,10 +148,8 @@ class TestUnderwriting:
         # Panel [A, AA, B]: a strict majority backs >= A, so the binding grade is A
         # (ownership-proven evidence lets the floor stand uncapped).
         bh = addr_str(direct_bob)
-        url = f"https://proof.example.com/{bh.lower()}"
         direct_vm.sender = direct_bob
-        direct_vm.mock_web(url, {"status": 200, "body": f"Owner {bh}. Strong current revenue."})
-        credence.request_credit(PURPOSE, 500, json.dumps([ev_url("Proof", url)]))
+        credence.request_credit(PURPOSE, 500, json.dumps([prove_domain(direct_vm, credence, direct_bob)]))
         mock_each(direct_vm, ["A", "AA", "B"])
         out = credence.assess(bh)
         assert out["grade"] == "A" and out["status"] == "approved"
@@ -157,8 +183,9 @@ class TestWebEvidence:
     def test_contract_fetches_url_evidence_and_grades(self, direct_vm, credence, direct_bob):
         bh = addr_str(direct_bob)
         direct_vm.sender = direct_bob
-        credence.request_credit(PURPOSE, 500,
-                                json.dumps([ev_url("Revenue dashboard", "https://stripe.example.com/me")]))
+        credence.request_credit(PURPOSE, 500, json.dumps([
+            prove_domain(direct_vm, credence, direct_bob, "stripe.example.com"),
+            ev_url("Revenue dashboard", "https://stripe.example.com/me")]))
         direct_vm.mock_web(r"stripe\.example\.com/me",
                            {"status": 200, "body": f"Account owner {bh}. Trailing 12-month revenue: $148,200. Churn 2%."})
         mock_all(direct_vm, "AA")
@@ -172,8 +199,9 @@ class TestWebEvidence:
     def test_fetched_text_actually_reaches_the_underwriter(self, direct_vm, credence, direct_bob):
         bh = addr_str(direct_bob)
         direct_vm.sender = direct_bob
-        credence.request_credit(PURPOSE, 500,
-                                json.dumps([ev_url("Proof", "https://proof.example.com/x")]))
+        credence.request_credit(PURPOSE, 500, json.dumps([
+            prove_domain(direct_vm, credence, direct_bob, "proof.example.com"),
+            ev_url("Proof", "https://proof.example.com/x")]))
         direct_vm.mock_web(r"proof\.example\.com/x",
                            {"status": 200, "body": f"Owner {bh}. UNIQUEMARKER_SOLVENT_42"})
         direct_vm.mock_llm(r"FETCHED PAGE TEXT:[\s\S]*UNIQUEMARKER_SOLVENT_42", grade_reply("AAA"))
@@ -454,10 +482,13 @@ class TestPoolAdmin:
 class TestHardening:
     def test_unowned_evidence_is_capped_at_floor_grade(self, direct_vm, credence, direct_bob):
         # Even if the panel says AAA, evidence that does not PROVE the applicant owns
-        # it cannot exceed grade C (the identity-binding backstop for H1).
+        # it cannot exceed grade C - and unauthenticated claims never unlock lender
+        # capital: the credit limit is ZERO and draws revert.
         out = apply_and_assess(direct_vm, credence, direct_bob, g="AAA", owned=False)
         assert out["grade"] == "C" and out["ownership_proven"] is False
-        assert out["credit_limit"] == str(100 * TOK)
+        assert out["credit_limit"] == "0"
+        with direct_vm.expect_revert("no authenticated credit line"):
+            credence.draw(1 * TOK)
 
     def test_ownership_proof_unlocks_higher_grade(self, direct_vm, credence, direct_bob):
         out = apply_and_assess(direct_vm, credence, direct_bob, g="AAA", owned=True)
@@ -599,7 +630,9 @@ class TestCreditOracle:
         credence.service_book(50)                    # marks default + requires_reassessment
         b = credence.get_borrower(addr_str(direct_bob))
         assert b["status"] == "defaulted" and b["requires_reassessment"] is True
-        # Repay the defaulted debt in full (100 principal + 2 fee).
+        # The default was written off on recognition; the full debt is still owed.
+        assert b["owed"] == "0" and b["recovery_owed"] == str(102 * TOK)
+        # Repay the defaulted debt in full (100 principal + 2 fee) as a recovery.
         direct_vm.sender = direct_bob
         direct_vm.value = 102 * TOK
         credence.repay()
@@ -644,7 +677,7 @@ class TestRiskPricingAndPaging:
 class TestEnterprise:
     def test_config_version_and_risk_defaults(self, credence):
         cfg = credence.get_config()
-        assert cfg["version"] == "1.4.0"
+        assert cfg["version"] == "2.0.0"
         assert cfg["max_utilization_bps"] == 10000
         assert "guardian" in cfg
 
@@ -747,33 +780,32 @@ class TestEnterprise:
 # ----------------------------------------------------- appeal ladder (due process)
 
 class TestAppeal:
-    def _proof(self, vm, bob, grade):
+    def _proof(self, vm, c, bob, grade, seq=None):
         bh = addr_str(bob)
-        url = f"https://proof.example.com/{bh.lower()}"
-        vm.mock_web(url, {"status": 200, "body": f"Owner {bh}. Strong, verified current revenue."})
+        item = prove_domain(vm, c, bob, seq=seq)
         vm.mock_llm(r"impartial credit underwriter", grade_reply(grade))
-        return bh, url
+        return bh, item
 
     def test_appeal_escalates_to_larger_panel(self, direct_vm, credence, direct_bob):
         direct_vm.sender = direct_bob
-        bh, url = self._proof(direct_vm, direct_bob, "DENY")
-        credence.request_credit(PURPOSE, 500, json.dumps([ev_url("Proof", url)]))
+        bh, item = self._proof(direct_vm, credence, direct_bob, "DENY")
+        credence.request_credit(PURPOSE, 500, json.dumps([item]))
         out = credence.assess(bh)
         assert out["status"] == "denied" and out["appeal_tier"] == 0
         assert len(out["grade_votes"]) == 3                      # initial panel of 3
         # Escalate to the larger independent panel, which approves.
         direct_vm.clear_mocks()
-        self._proof(direct_vm, direct_bob, "AA")
+        self._proof(direct_vm, credence, direct_bob, "AA", seq=0)
         out = credence.appeal()
         assert out["status"] == "approved" and out["grade"] == "AA"
         assert out["appeal_tier"] == 1 and len(out["grade_votes"]) == 5  # panel of 5
 
     def test_appeal_only_once(self, direct_vm, credence, direct_bob):
         direct_vm.sender = direct_bob
-        bh, url = self._proof(direct_vm, direct_bob, "A")
-        credence.request_credit(PURPOSE, 500, json.dumps([ev_url("Proof", url)]))
+        bh, item = self._proof(direct_vm, credence, direct_bob, "A")
+        credence.request_credit(PURPOSE, 500, json.dumps([item]))
         credence.assess(bh)
-        direct_vm.clear_mocks(); self._proof(direct_vm, direct_bob, "A")
+        direct_vm.clear_mocks(); self._proof(direct_vm, credence, direct_bob, "A", seq=0)
         credence.appeal()
         with direct_vm.expect_revert("already been appealed"):
             credence.appeal()
@@ -904,3 +936,220 @@ class TestInterest:
         assert credence.stats()["active_lines"] == 0               # now fully settled
 
 
+
+
+# ------------------------------------- v2.0: steward findings (authentication + bad debt)
+
+class TestAuthenticatedOwnership:
+    """Steward finding 1: borrower-controlled pages could establish ownership merely by
+    displaying an address, and unauthenticated claims gated lender funds."""
+
+    def test_page_that_merely_displays_address_proves_nothing(self, direct_vm, credence, direct_alice, direct_bob):
+        fund_pool(direct_vm, credence, direct_alice, tokens=1000)
+        bh = addr_str(direct_bob)
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_bob
+        url = f"https://forum.example.com/search?q={bh}"   # an echo page anyone can make
+        direct_vm.mock_web(r"forum\.example\.com", {"status": 200, "body": f"Results for {bh}: owner {bh}"})
+        credence.request_credit(PURPOSE, 500, json.dumps([ev_url("My page", url)]))
+        mock_all(direct_vm, "AAA")
+        out = credence.assess(bh)
+        assert out["ownership_proven"] is False and out["grade"] == "C"
+        assert out["credit_limit"] == "0"
+        assert direct_vm.run_validator() is True
+        with direct_vm.expect_revert("no authenticated credit line"):
+            credence.draw(1 * TOK)
+        assert credence.is_creditworthy(bh, "C") is False
+        assert credence.credit_of(bh)["available"] == "0"
+
+    def test_domain_evidence_must_be_a_bare_host(self, direct_vm, credence, direct_bob):
+        direct_vm.sender = direct_bob
+        for bad in ("evil.example.com/?q=x", "https://evil.example.com", "evil.example.com:8443",
+                    "user@evil.example.com", "localhost", "1.2.3.4x"):
+            with direct_vm.expect_revert("bare hostname"):
+                credence.request_credit(PURPOSE, 100, json.dumps(
+                    [{"kind": "domain", "label": "d", "content": bad}]))
+
+    def test_contract_builds_the_proof_url(self, direct_vm, credence, direct_bob):
+        # Only the fixed /.well-known path is consulted: a token served anywhere else
+        # on the domain (e.g. an echoing page) does not count.
+        bh = addr_str(direct_bob)
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_bob
+        tok = credence.ownership_challenge(bh)["token"]
+        dom = host_for(direct_bob)
+        direct_vm.mock_web(rf"{dom.replace('.', chr(92) + '.')}/\.well-known/credence-verify\.txt",
+                           {"status": 404, "body": "not found"})
+        direct_vm.mock_web(rf"{dom.replace('.', chr(92) + '.')}/echo", {"status": 200, "body": tok})
+        credence.request_credit(PURPOSE, 500, json.dumps(
+            [{"kind": "domain", "label": "d", "content": dom}, ev_url("echo", f"https://{dom}/echo")]))
+        mock_all(direct_vm, "AAA")
+        out = credence.assess(bh)
+        assert out["ownership_proven"] is False and out["credit_limit"] == "0"
+
+    def test_token_is_bound_to_the_borrower(self, direct_vm, credence, direct_bob, direct_charlie):
+        # Charlie copies Bob's (public) token onto Charlie's own domain: rejected,
+        # because the token encodes the borrower's address.
+        ch = addr_str(direct_charlie)
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_charlie
+        bobs = credence.ownership_challenge(addr_str(direct_bob))["token"]
+        dom = host_for(direct_charlie)
+        direct_vm.mock_web(rf"{dom.replace('.', chr(92) + '.')}/\.well-known", {"status": 200, "body": bobs})
+        credence.request_credit(PURPOSE, 500, json.dumps([{"kind": "domain", "label": "d", "content": dom}]))
+        mock_all(direct_vm, "AAA")
+        assert credence.assess(ch)["ownership_proven"] is False
+
+    def test_stale_token_from_a_previous_request_fails(self, direct_vm, credence, direct_bob):
+        bh = addr_str(direct_bob)
+        apply_and_assess(direct_vm, credence, direct_bob, g="A")       # consumes seq 0
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_bob
+        item = prove_domain(direct_vm, credence, direct_bob, seq=0)   # re-serve the OLD token
+        credence.request_credit(PURPOSE, 500, json.dumps([item]))
+        mock_all(direct_vm, "AAA")
+        out = credence.assess(bh)
+        assert out["ownership_proven"] is False and out["credit_limit"] == "0"
+
+    def test_a_domain_binds_to_one_borrower(self, direct_vm, credence, direct_bob, direct_charlie):
+        out = apply_and_assess(direct_vm, credence, direct_bob, g="A")
+        dom = host_for(direct_bob)
+        assert out["verified_domains"] == [dom]
+        assert credence.domain_owner_of(dom).lower() == addr_str(direct_bob).lower()
+        # Charlie even publishes a VALID Charlie token on Bob's domain: still refused.
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_charlie
+        item = prove_domain(direct_vm, credence, direct_charlie, domain=dom)
+        credence.request_credit(PURPOSE, 500, json.dumps([item]))
+        mock_all(direct_vm, "AAA")
+        out = credence.assess(addr_str(direct_charlie))
+        assert out["ownership_proven"] is False and out["credit_limit"] == "0"
+
+    def test_url_counts_as_owned_only_on_a_proven_host(self, direct_vm, credence, direct_bob):
+        bh = addr_str(direct_bob)
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_bob
+        item = prove_domain(direct_vm, credence, direct_bob)
+        direct_vm.mock_web(r"other\.example\.org", {"status": 200, "body": f"{bh} revenue"})
+        credence.request_credit(PURPOSE, 500, json.dumps(
+            [item, ev_url("elsewhere", "https://other.example.org/me")]))
+        mock_all(direct_vm, "A")
+        out = credence.assess(bh)
+        assert out["ownership_proven"] is True
+        u = next(e for e in out["evidence"] if e["kind"] == "url")
+        d = next(e for e in out["evidence"] if e["kind"] == "domain")
+        assert u["ownership_proven"] is False and d["ownership_proven"] is True
+        assert direct_vm.run_validator() is True
+
+
+class TestBadDebtLifecycle:
+    """Steward finding 2: no complete bad-debt recovery or write-off path."""
+
+    def _default(self, vm, c, lender_a, lender_b, borrower, draw_tokens=100):
+        set_chain_time("2026-01-01T00:00:00Z")
+        fund_pool(vm, c, lender_a, tokens=750)
+        fund_pool(vm, c, lender_b, tokens=250)
+        apply_and_assess(vm, c, borrower, g="A")
+        vm.sender = borrower
+        c.draw(draw_tokens * TOK)
+        set_chain_time("2026-03-15T00:00:00Z")
+        vm.sender = lender_a
+        c.service_book(50)
+
+    def test_default_is_written_off_and_loss_socialised_pro_rata(self, direct_vm, credence, direct_alice, direct_bob, direct_charlie):
+        self._default(direct_vm, credence, direct_alice, direct_charlie, direct_bob)
+        pool = credence.get_pool()
+        b = credence.get_borrower(addr_str(direct_bob))
+        # The line left the book; the full debt (100 principal + 2 fee) stays owed.
+        assert pool["outstanding_principal"] == "0" and pool["active_lines"] == 0
+        assert b["status"] == "defaulted" and b["recovery_owed"] == str(102 * TOK)
+        assert pool["written_off_principal"] == str(100 * TOK)
+        # No revenue had been earned yet -> lenders bear the whole principal loss.
+        assert pool["reserve_losses"] == "0" and pool["lender_losses"] == str(100 * TOK)
+        a = int(credence.lender_balance(addr_str(direct_alice))["funded"])
+        c = int(credence.lender_balance(addr_str(direct_charlie))["funded"])
+        assert abs(a - 675 * TOK) <= 1 and abs(c - 225 * TOK) <= 1   # 75% / 25% of the loss
+        assert pool["total_funded"] == str(900 * TOK)
+
+    def test_no_lender_can_exit_at_par_after_a_default(self, direct_vm, credence, direct_alice, direct_bob, direct_charlie):
+        self._default(direct_vm, credence, direct_alice, direct_charlie, direct_bob)
+        direct_vm.sender = direct_charlie
+        with direct_vm.expect_revert("exceeds your contributed capital"):
+            credence.defund(250 * TOK)
+        bal = int(credence.lender_balance(addr_str(direct_charlie))["funded"])
+        credence.defund(bal)                                      # exits at the written-down value
+        assert credence.lender_balance(addr_str(direct_charlie))["funded"] == "0"
+
+    def test_revenue_reserve_absorbs_first_loss(self, direct_vm, credence, direct_alice, direct_bob, direct_charlie):
+        # Charlie borrows and repays first, building protocol revenue; then Bob defaults.
+        set_chain_time("2026-01-01T00:00:00Z")
+        fund_pool(direct_vm, credence, direct_alice, tokens=1000)
+        apply_and_assess(direct_vm, credence, direct_charlie, g="C", tokens=100)
+        direct_vm.sender = direct_charlie
+        credence.draw(100 * TOK)
+        direct_vm.value = 104 * TOK
+        credence.repay()
+        direct_vm.value = 0
+        reserve = int(credence.get_pool()["fee_revenue"])
+        assert reserve > 0
+        apply_and_assess(direct_vm, credence, direct_bob, g="A")
+        direct_vm.sender = direct_bob
+        credence.draw(10 * TOK)
+        set_chain_time("2026-03-15T00:00:00Z")
+        credence.service_book(50)
+        pool = credence.get_pool()
+        assert pool["reserve_losses"] == str(reserve) and pool["fee_revenue"] == "0"
+        assert int(pool["lender_losses"]) == 10 * TOK - reserve
+
+    def test_recovery_restores_lenders_then_reserve(self, direct_vm, credence, direct_alice, direct_bob, direct_charlie):
+        self._default(direct_vm, credence, direct_alice, direct_charlie, direct_bob)
+        bh = addr_str(direct_bob)
+        direct_vm.sender = direct_bob
+        with direct_vm.expect_revert("written-off debt is still owed"):
+            credence.request_credit(PURPOSE, 100, "")
+        with direct_vm.expect_revert("overpayment"):
+            direct_vm.value = 103 * TOK
+            credence.repay()
+        direct_vm.value = 60 * TOK                               # partial recovery
+        out = credence.repay()
+        assert out["recovery_owed"] == str(42 * TOK) and out["status"] == "defaulted"
+        assert credence.get_pool()["total_funded"] == str(960 * TOK)
+        direct_vm.value = 42 * TOK                               # the rest
+        out = credence.repay()
+        direct_vm.value = 0
+        pool = credence.get_pool()
+        assert out["recovery_owed"] == "0" and out["status"] == "approved"
+        assert out["requires_reassessment"] is True             # must re-underwrite
+        assert pool["total_funded"] == str(1000 * TOK)          # lenders made whole
+        assert pool["total_recovered"] == str(102 * TOK)
+        a = int(credence.lender_balance(addr_str(direct_alice))["funded"])
+        assert abs(a - 750 * TOK) <= 1
+        with direct_vm.expect_revert("new assessment is required"):
+            credence.draw(1 * TOK)
+
+    def test_write_off_needs_no_keeper(self, direct_vm, credence, direct_alice, direct_bob, direct_charlie):
+        # Any touch after grace (here the borrower's own repay) recognises the default.
+        set_chain_time("2026-01-01T00:00:00Z")
+        fund_pool(direct_vm, credence, direct_alice, tokens=1000)
+        apply_and_assess(direct_vm, credence, direct_bob, g="A")
+        direct_vm.sender = direct_bob
+        credence.draw(100 * TOK)
+        set_chain_time("2026-03-15T00:00:00Z")
+        direct_vm.value = 102 * TOK
+        out = credence.repay()
+        direct_vm.value = 0
+        assert out["written_off"] == str(102 * TOK) and out["recovery_owed"] == "0"
+        assert credence.get_pool()["total_funded"] == str(1000 * TOK)
+
+
+class TestDomainSquatting:
+    def test_mentioning_a_domain_first_does_not_flag_its_real_owner(self, direct_vm, credence, direct_bob, direct_charlie):
+        # Charlie lists Bob's domain without being able to prove it...
+        direct_vm.clear_mocks()
+        direct_vm.sender = direct_charlie
+        credence.request_credit(PURPOSE, 100, json.dumps(
+            [{"kind": "domain", "label": "d", "content": host_for(direct_bob)}]))
+        # ...then Bob proves it: no sybil flag, ownership proven, line unlocked.
+        out = apply_and_assess(direct_vm, credence, direct_bob, g="A")
+        assert out["sybil_flag"] is False and out["ownership_proven"] is True
+        assert out["credit_limit"] == str(500 * TOK)

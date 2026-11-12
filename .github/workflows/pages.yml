@@ -30,7 +30,7 @@ jobs:
       NEXT_PUBLIC_GENLAYER_CHAIN_NAME: GenLayer Studio
       NEXT_PUBLIC_GENLAYER_SYMBOL: GEN
       # Live Credence v1.4 core on studionet (see docs/LIVE_EVIDENCE.md §1).
-      NEXT_PUBLIC_CREDENCE_CONTRACT_ADDRESS: "0x8D9F4365b39bD2646d18e6ceCc9758344605f9ED"
+      NEXT_PUBLIC_CREDENCE_CONTRACT_ADDRESS: "0x0e0fc114ed62881740b9Be8b5ee8d39671A4c68b"
       NEXT_PUBLIC_REPO_URL: https://github.com/yoyoblair333-wq/credence
       NEXT_PUBLIC_SITE_URL: https://yoyoblair333-wq.github.io/credence
     steps:

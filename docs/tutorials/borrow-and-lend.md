@@ -55,13 +55,17 @@ process. All borrower writes are sent from the borrower's **own** account (the c
 ```ts
 import type { EvidenceDraft } from "@credence/sdk";
 
-// Evidence is up to 8 items of { kind: "text" | "url" | "image", label, content }.
+// Evidence is up to 8 items of { kind: "domain" | "text" | "url" | "image", label, content }.
+// FIRST: read your token (ownership_challenge(yourAddress)) and publish it as a line of
+// https://yourstudio.com/.well-known/credence-verify.txt
 const evidence: EvidenceDraft[] = [
-  // A url whose page displays YOUR wallet address proves control and unlocks grades above C.
-  { kind: "url",   label: "On-chain settlement history", content: "https://explorer.example.com/addr/0xYou" },
+  // The domain proof: the ONLY thing that unlocks a credit line (and grades above C).
+  { kind: "domain", label: "Ownership proof",            content: "yourstudio.com" },
+  // A url on your PROVEN domain counts as yours; elsewhere it is corroboration only.
+  { kind: "url",   label: "Revenue page",                content: "https://yourstudio.com/revenue" },
   // At most ONE image: an https page rendered to a screenshot and vision-judged.
   { kind: "image", label: "Revenue dashboard",            content: "https://dash.example.com/me" },
-  // Free text is read as-is and can never prove ownership (so it's capped at C on its own).
+  // Free text is read as-is and can never prove ownership.
   { kind: "text",  label: "Context",                      content: "18 months of on-time vendor payments." },
 ];
 
@@ -73,10 +77,11 @@ await credence.requestCredit("Working capital for Q3 inventory", 500, evidence);
 This sets your status to `assessing`. You can't request a reassessment while a line is still
 outstanding (`settle the outstanding line before requesting a reassessment`).
 
-> **Identity proof is what unlocks a real line.** To reach A/AA/AAA you need at least one `url`
-> exhibit whose live page text contains your own `0x…` address (a DNS-TXT-style challenge,
-> checked in code). Without it, the grade is capped at **C = 100 tokens** no matter how strong
-> the panel's vote. `text` and `image` are always unproven. (See [EXPLAINER.md §6](../EXPLAINER.md).)
+> **No proof, no line.** You need a `domain` exhibit whose
+> `https://<domain>/.well-known/credence-verify.txt` contains your current token (it rotates
+> every request, so publish the fresh one first). Without it your credit limit is **zero** and
+> the grade is capped at C, no matter how strong the panel's vote. Showing your address on a
+> page proves nothing. `text` and `image` are always unproven. (See [EXPLAINER.md §6](../EXPLAINER.md).)
 
 ### 1b. Assess (run the consensus AI panel)
 
@@ -171,8 +176,10 @@ the rest to protocol revenue.
 If a line passes `due_at` it goes **overdue** (standing −8); past `due_at + grace_seconds`
 (default 7 days) the keeper (`service_book`, or the inline check on `draw`/`repay`) marks it
 **defaulted**: `defaults++`, standing −40, and `requires_reassessment` is set — you must pass a
-fresh assessment before drawing again. Repaying a defaulted line in full restores you toward
-`approved`. There is no collateral to seize; the penalty is to your reputation and future credit.
+fresh assessment before drawing again. The debt is **written off** at the same moment (the
+protocol's revenue reserve and then lenders absorb the principal loss) and stays owed as
+`recovery_owed`; you cannot apply again until it is repaid. Recoveries go to lenders first.
+There is no collateral to seize; the penalty is to your reputation and future credit.
 
 ---
 

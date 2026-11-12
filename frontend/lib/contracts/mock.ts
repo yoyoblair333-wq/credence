@@ -260,8 +260,9 @@ export function mockAssess(
   ).length;
   const substance = purpose.trim().length;
 
-  // Identity binding: the contract marks a url item ownership-proven only when
-  // the fetched page displays the applicant's own wallet address. Demo mode
+  // Identity binding: ownership is proven only by the applicant's one-time token
+  // at https://<domain>/.well-known/credence-verify.txt (a URL the contract builds
+  // itself), and without it the credit limit is ZERO. Demo mode
   // fetches nothing, so no demo evidence can prove ownership — which means the
   // binding grade is capped at the unowned cap ("C"), exactly like on-chain.
   // (Image evidence is never identity-proven, by contract rule.)
@@ -320,10 +321,10 @@ export function mockAssess(
 
   const rationale =
     grade === "DENY"
-      ? `${panelPrefix}No strict majority of the underwriting panel supported extending credit on the evidence provided; the safe default (no credit) applies. Add verifiable, current evidence — ideally a live https page the panel can fetch that displays your wallet address — and re-apply.`
+      ? `${panelPrefix}No strict majority of the underwriting panel supported extending credit on the evidence provided; the safe default (no credit) applies. Add verifiable, current evidence — plus a domain ownership proof (your token at /.well-known/credence-verify.txt) — and re-apply.`
       : `${panelPrefix}The evidence substantiates a ${grade} line: ${sourceText}. Risk flagged no sybil reuse.${
           capped
-            ? ` Identity binding: no cited page displayed this wallet's address, so — however strong the material looks — the line is capped at ${UNOWNED_GRADE_CAP}. Add a URL whose page shows your connected address to unlock higher grades.`
+            ? ` Identity binding: no domain ownership proof was verified, so this is a reputation grade only (capped at ${UNOWNED_GRADE_CAP}) and the credit limit is zero. Publish your token at /.well-known/credence-verify.txt on a domain you control to unlock a credit line.`
             : " A strict majority backs this grade."
         }`;
 

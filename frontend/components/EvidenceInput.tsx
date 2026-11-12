@@ -20,6 +20,9 @@ export const EVIDENCE_LIMITS = {
 
 // Mirrors credence.py's _URL_RE: a single https:// URL, min 3 chars of path/host.
 const HTTPS_URL_RE = /^https:\/\/[A-Za-z0-9._~:/?#@!$&'()*+,;=%-]{3,}$/;
+// Mirrors credence.py's _DOMAIN_RE: a bare lower-case hostname (no scheme/path/port).
+const DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,61}[a-z0-9]$/;
+const PROOF_PATH = "/.well-known/credence-verify.txt";
 
 let draftSeq = 0;
 function newDraft(kind: EvidenceKind = "text"): EvidenceDraft {
@@ -41,6 +44,9 @@ export function validateEvidenceItem(item: EvidenceDraft): string {
   if (item.kind === "text") {
     if (content.length > EVIDENCE_LIMITS.MAX_TEXT_CHARS)
       return `Text evidence exceeds ${EVIDENCE_LIMITS.MAX_TEXT_CHARS} characters.`;
+  } else if (item.kind === "domain") {
+    if (!DOMAIN_RE.test(content.toLowerCase().replace(/\.$/, "")))
+      return "Enter a bare domain you control, like example.com (no https://, path or port).";
   } else {
     // url AND image both carry a single https URL.
     if (content.length > EVIDENCE_LIMITS.MAX_URL_CHARS || !HTTPS_URL_RE.test(content))
@@ -57,6 +63,8 @@ export function validateEvidenceList(items: EvidenceDraft[]): string {
   const images = withContent.filter((it) => it.kind === "image").length;
   if (images > EVIDENCE_LIMITS.MAX_IMAGE_ITEMS)
     return "At most 1 image evidence item is allowed.";
+  if (withContent.filter((it) => it.kind === "domain").length > 2)
+    return "At most 2 domain ownership proofs are allowed.";
   return "";
 }
 
@@ -70,7 +78,7 @@ export function serializeEvidence(items: EvidenceDraft[]): string {
     .map((it) => ({
       kind: it.kind,
       label: it.label.trim(),
-      content: it.content.trim(),
+      content: it.kind === "domain" ? it.content.trim().toLowerCase() : it.content.trim(),
     }))
     .filter((it) => it.content.length > 0);
   if (cleaned.length === 0) return "";
@@ -81,6 +89,8 @@ interface EvidenceInputProps {
   items: EvidenceDraft[];
   onChange: (items: EvidenceDraft[]) => void;
   disabled?: boolean;
+  /** The connected borrower's current ownership token (ownership_challenge). */
+  proofToken?: string;
 }
 
 /**
@@ -91,7 +101,7 @@ interface EvidenceInputProps {
  * re-fetches, re-reads it, and checks whether it displays the applicant's wallet
  * address — the on-chain, consensus-checked proof of ownership.
  */
-export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps) {
+export function EvidenceInput({ items, onChange, disabled, proofToken }: EvidenceInputProps) {
   const atMax = items.length >= EVIDENCE_LIMITS.MAX_ITEMS;
   const imageCount = items.filter((it) => it.kind === "image").length;
 
@@ -127,14 +137,19 @@ export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps)
       <div className="flex items-start gap-2 rounded-md border border-accent/20 bg-accent/5 p-3">
         <ShieldCheck className="w-4 h-4 text-accent mt-0.5 shrink-0" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          <span className="text-foreground font-medium">Prove ownership to go above a C line.</span>{" "}
-          Grades above <span className="font-semibold">C</span> require evidence you
-          control — so add a URL whose page{" "}
-          <span className="text-accent">displays your connected wallet address</span>{" "}
-          (like a DNS-TXT verification). Each validator fetches the page and checks
-          for your address. Text and image evidence are weighed as corroboration but
-          can never prove ownership, so without at least one proven URL the grade is
-          capped at C — however strong the rest looks.
+          <span className="text-foreground font-medium">No proof, no credit line.</span>{" "}
+          Showing your address on a page proves nothing, so Credence uses a domain
+          check instead. Publish this line at{" "}
+          <span className="font-mono text-accent">https://&lt;your-domain&gt;{PROOF_PATH}</span>{" "}
+          <em>before</em> you apply, then add a <span className="font-semibold">Domain</span> item:
+          <span className="block mt-1.5 font-mono text-[11px] break-all text-foreground">
+            {proofToken || "credence-verify=… (connect your wallet to see your token)"}
+          </span>
+          <span className="block mt-1.5">
+            The contract builds that URL itself and every validator checks it. URLs on a
+            proven domain count as yours. Without a proven domain you can still get a
+            public reputation grade (max C), but your credit limit is zero.
+          </span>
         </p>
       </div>
 
@@ -162,6 +177,13 @@ export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps)
                       aria-label={`Evidence item ${idx + 1} kind`}
                       className="inline-flex rounded-md border border-hair overflow-hidden"
                     >
+                      <KindToggle
+                        active={item.kind === "domain"}
+                        onClick={() => update(item.id, { kind: "domain" })}
+                        disabled={disabled}
+                        icon={<ShieldCheck className="w-3.5 h-3.5" />}
+                        label="Domain"
+                      />
                       <KindToggle
                         active={item.kind === "text"}
                         onClick={() => update(item.id, { kind: "text" })}
@@ -220,7 +242,7 @@ export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps)
 
                 <div className="space-y-1.5">
                   <Label htmlFor={contentId} className="text-xs text-muted-foreground">
-                    {isTextKind ? "Text" : "https URL"}
+                    {isTextKind ? "Text" : item.kind === "domain" ? "Domain you control" : "https URL"}
                   </Label>
                   {isTextKind ? (
                     <textarea
@@ -231,6 +253,7 @@ export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps)
                       maxLength={EVIDENCE_LIMITS.MAX_TEXT_CHARS}
                       disabled={disabled}
                       aria-invalid={showError}
+                      onChange={(e) => update(item.id, { content: e.target.value })}
                       className={`placeholder:text-muted-foreground border-input w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:opacity-50 ${
                         showError ? "border-destructive" : ""
                       }`}
@@ -238,9 +261,9 @@ export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps)
                   ) : (
                     <Input
                       id={contentId}
-                      type="url"
+                      type={item.kind === "domain" ? "text" : "url"}
                       inputMode="url"
-                      placeholder="https://…"
+                      placeholder={item.kind === "domain" ? "example.com" : "https://…"}
                       value={item.content}
                       maxLength={EVIDENCE_LIMITS.MAX_URL_CHARS}
                       disabled={disabled}
@@ -252,8 +275,15 @@ export function EvidenceInput({ items, onChange, disabled }: EvidenceInputProps)
                   {item.kind === "url" && (
                     <p className="text-xs text-muted-foreground flex items-start gap-1">
                       <Globe className="w-3 h-3 text-accent shrink-0 mt-0.5" />
-                      Each underwriter opens this link live and checks it for your
-                      wallet address — the one way to prove ownership and lift the C cap.
+                      Each underwriter opens this link live. It counts as yours only if it
+                      is hosted on a domain you prove in the same application.
+                    </p>
+                  )}
+                  {item.kind === "domain" && (
+                    <p className="text-xs text-muted-foreground flex items-start gap-1">
+                      <ShieldCheck className="w-3 h-3 text-accent shrink-0 mt-0.5" />
+                      Validators fetch https://{item.content.trim() || "<domain>"}{PROOF_PATH} and
+                      look for your token on its own line. A domain can back only one borrower.
                     </p>
                   )}
                   {item.kind === "image" && (

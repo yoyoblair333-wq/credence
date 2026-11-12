@@ -18,6 +18,7 @@ import {
   useRequestCredit,
   useAssess,
   useIsDemoMode,
+  useOwnershipChallenge,
 } from "@/lib/hooks/useCredence";
 import { mockAssess, tokensToBaseString } from "@/lib/contracts/mock";
 import {
@@ -43,6 +44,7 @@ export function ApplyForm({
   const { address, isConnected } = useWallet();
   const { requestCreditAsync } = useRequestCredit();
   const { assessAsync } = useAssess();
+  const { data: challenge } = useOwnershipChallenge(address);
 
   const [purpose, setPurpose] = useState("");
   const [requested, setRequested] = useState("500");
@@ -107,7 +109,8 @@ export function ApplyForm({
         requestedTokens,
         items
       );
-      const limitTokens = GRADE_TOKENS[grade];
+      // No proof, no line (mirrors the contract): unproven -> zero limit.
+      const limitTokens = ownershipProven ? GRADE_TOKENS[grade] : 0;
       const now = new Date().toISOString();
       const borrower: Borrower = {
         addr: address || DEMO_ADDR,
@@ -144,7 +147,7 @@ export function ApplyForm({
             sha256: "(committed on-chain in a live assessment)",
             fetched_excerpt:
               it.kind === "url"
-                ? "[preview] In a live assessment each validator fetches this URL, judges the page text, and checks whether it displays your wallet address."
+                ? "[preview] In a live assessment each validator fetches this URL and judges the page text. It counts as yours only if it is hosted on a domain you proved."
                 : it.kind === "image"
                   ? "[preview] In a live assessment each validator renders this page to a screenshot and judges it with vision."
                   : "",
@@ -264,7 +267,7 @@ export function ApplyForm({
         </div>
 
         {/* Evidence builder */}
-        <EvidenceInput items={items} onChange={setItems} disabled={busy} />
+        <EvidenceInput items={items} onChange={setItems} disabled={busy} proofToken={challenge?.token} />
 
         {/* JSON preview */}
         <details className="rounded-lg border border-hair bg-panel-2 overflow-hidden group">

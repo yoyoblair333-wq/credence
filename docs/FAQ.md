@@ -41,13 +41,15 @@ is no off-chain custodian.
 
 ### What stops someone borrowing on a stranger's reputation?
 
-An **identity-bound ownership proof**, checked deterministically in code and re-verified by every
-validator. A `url` exhibit counts as *yours* only if the fetched page text displays **your own
-wallet address** (`applicant.lower() in fetched.lower()` — a DNS-TXT-style challenge). Without at
-least one ownership-proven URL, the grade is **capped at C (100 tokens)** regardless of how
-strongly the panel votes (`UNOWNED_GRADE_CAP`, enforced by `_cap_grade`). You can link to anyone's
-dashboard, but only you can make *your* page show *your* address. `text` and `image` evidence can
-never prove ownership. See [EXPLAINER.md §6](EXPLAINER.md) and
+An **authenticated domain proof**, checked deterministically in code and re-verified by every
+validator. Showing your address on a page proves nothing (anyone can post an address in a
+comment or a search box), so Credence uses an ACME-style check: read your one-time token with
+`ownership_challenge(yourAddress)`, publish it as a line of
+`https://<your-domain>/.well-known/credence-verify.txt`, and add a `domain` exhibit. The contract
+builds that URL itself, the token is bound to your address and rotates every request, and a
+domain can back only one borrower. `url` exhibits count as yours only on a proven domain.
+**Without a proven domain your credit limit is zero** (you can hold at most a public reputation
+grade of C). `text` and `image` evidence can never prove ownership. See [EXPLAINER.md §6](EXPLAINER.md) and
 [ARCHITECTURE.md §5](ARCHITECTURE.md).
 
 ---
@@ -108,7 +110,11 @@ Correct — the penalty is reputational and forward-looking. A line past `due_at
 (standing −8); past `due_at + grace_seconds` (default 7 days) it **defaults**: `defaults++`,
 standing −40, and `requires_reassessment` is set so the borrower **cannot draw again until they
 pass a fresh assessment**. A defaulted borrower's grade falls on re-assessment, shrinking or
-closing their line. Repaying in full restores them toward `approved`. The loan book is serviced
+closing their line. At the same moment the debt is **written off**: protocol revenue absorbs
+the principal loss first, any remainder is shared pro-rata by lenders (through a share index,
+so nobody can exit at par ahead of the loss), and the full debt stays owed as `recovery_owed`.
+Recoveries restore lenders first, then the reserve. Repaying the recovery in full restores the
+borrower toward `approved`. The loan book is serviced
 permissionlessly by `service_book` (and inline on every `draw`/`repay`) against the consensus
 clock, so delinquency is recorded even if no keeper has swept. See
 [ARCHITECTURE.md §1](ARCHITECTURE.md).
